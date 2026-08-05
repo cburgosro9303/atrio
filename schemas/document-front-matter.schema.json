@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "document-front-matter.schema.json",
+  "title": "Document front matter",
+  "description": "The parsed form of a markdown document's front matter (ADR-014). The front matter is written by hand as YAML between --- delimiters; this schema describes the result of parsing that YAML, not the YAML text itself (ADR-017). It composes the reduced documentEnvelope, not the full envelope: a markdown file is hand-edited, and createdAt/updatedAt/createdBy copied into it by hand would only rot against git, which already knows both. This schema cannot see whether a relation's target actually exists — a document is indexable only once the indexer (T-022) confirms that too, and it attributes an invalid document to its last editor via git.",
+  "type": "object",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/documentEnvelope"}
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "description": "Why this document exists, in free text. The spec never defines a closed catalog of purposes, so this schema does not invent one.",
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "description": "ISO 639-1 code of the language this document is written in. Must match the project's artifactLanguage; that cross-artifact check is made by the core, not by this schema.",
+      "type": "string",
+      "pattern": "^[a-z]{2}$"
+    },
+    "tags": {"$ref": "common.schema.json#/$defs/tags"},
+    "relations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/relation"},
+      "uniqueItems": true
+    }
+  },
+  "required": ["title", "purpose", "language"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "relation": {
+      "description": "A typed link from this document to another artifact.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "description": "The catalog is closed; widening it is a schema change.",
+          "enum": ["implements", "supersedes", "relates_to", "derives_from"]
+        },
+        "target": {"$ref": "common.schema.json#/$defs/reference"}
+      },
+      "required": ["kind", "target"],
+      "additionalProperties": false
+    }
+  }
+}

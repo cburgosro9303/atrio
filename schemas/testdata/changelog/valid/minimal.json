@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "implementer",
+    "agentId": "implementer@1.0.0"
+  },
+  "taskRefs": [
+    "01J8Z3K2M4N5P6Q7R8S9T0V1W3"
+  ],
+  "branch": "task/01hx4q-login-oauth",
+  "summary": "Add OAuth login using the provider's authorization code grant.",
+  "changes": [
+    {
+      "path": "core/auth/oauth.go",
+      "kind": "modified",
+      "description": "Implement the authorization code exchange."
+    }
+  ]
+}

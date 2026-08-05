@@ -69,6 +69,12 @@ El test que hace cumplir las dependencias unidireccionales vive en `internal/arc
 
 Las acciones van ancladas por SHA de commit y `.github/dependabot.yml` las actualiza — acotado a `github-actions`, nunca a `gomod`.
 
+## Esquemas de artefactos
+
+`schemas/` es un paquete hoja fuera de los 8 de ADR-012: no importa nada del módulo y lo consumirán `store/`, `flows/` y `api/`. No es excepción a ADR-016 —ninguna dirección de dependencia cambia— pero queda anotado aquí porque el paquete existe. Los `.json` van embebidos con `go:embed`; `schemas/README.md` es el contrato legible y lleva la tabla de qué valida el esquema y qué valida el código.
+
+Convenciones que un test hace cumplir: draft 2020-12, `$id` relativo idéntico al nombre del archivo, envolvente compuesta con `allOf` y cerrada con `unevaluatedProperties: false`, `title` y `description` no vacíos. Identificadores y enums **en inglés** (el bilingüismo llega por i18n). Una fixture inválida se llama `<propiedad>--<motivo>.json` y el test exige que el error del validador **apunte a esa propiedad** recorriendo el árbol de causas, no buscando subcadenas.
+
 ## Estado actual
 
-**T-001 y T-002 completadas.** Módulo `github.com/cburgosro9303/atrio`, Go 1.26, los 8 paquetes con sus `doc.go`, test de arquitectura, linters y pipeline de CI operativos. Próxima tarea: **T-010 (JSON Schemas literales de artefactos)**, primera del bloque de contratos de datos; es tarea de diseño, se planifica en la sesión principal y se aprueba antes de escribir. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.
+**T-001, T-002 y T-010 completadas.** Módulo `github.com/cburgosro9303/atrio`, Go 1.26, los 8 paquetes con sus `doc.go`, test de arquitectura, pipeline de CI y los 9 esquemas de artefactos con su arnés de pruebas. **ADR-017** añadido (front-matter YAML validado, acota ADR-005). Próximas tareas: **T-011** (manifiesto del marketplace — API pública, exige revisión explícita antes de congelar) y **T-012** (definición canónica de agente y de flujo), paralelizables entre sí; ambas son diseño y consumen las convenciones de T-010. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.

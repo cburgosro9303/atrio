@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W3",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "name": "atrio",
+  "description": "Local-first orchestration platform for AI coding agents, with a CLI core and an embedded web portal.",
+  "artifactLanguage": "es",
+  "environments": ["dev", "staging", "prod"],
+  "layers": [
+    {
+      "name": "frontend",
+      "stack": ["react", "typescript", "vite"],
+      "applicationType": "spa"
+    },
+    {
+      "name": "backend",
+      "stack": ["go"],
+      "applicationType": "cli"
+    }
+  ],
+  "providers": [
+    {"id": "claude-code"}
+  ],
+  "platformVersion": "0.2.1",
+  "schemaVersions": {
+    "task": 1,
+    "decision": 1,
+    "changelog": 1
+  }
+}

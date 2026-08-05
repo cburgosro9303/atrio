@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W3",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "title": "Pair the flat-file store with a SQLite index",
+  "context": "Querying artifacts across the whole repository by scanning files does not scale past a few hundred tasks.",
+  "decision": "Rebuild a SQLite index from the flat files on demand; the files remain the source of truth.",
+  "consequences": [
+    "Queries stay fast as the number of artifacts grows.",
+    "The index can always be rebuilt from git history, so it never needs its own backup."
+  ],
+  "alternativesConsidered": [
+    {
+      "option": "Store artifacts directly in SQLite.",
+      "whyNot": "Git would no longer be the source of truth, breaking offline merge and review by diff."
+    },
+    {
+      "option": "Keep scanning flat files on every query.",
+      "whyNot": "Latency grows linearly with repository size and blocks the portal UI."
+    }
+  ],
+  "status": "active",
+  "refs": [
+    {"type": "task", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4"}
+  ]
+}

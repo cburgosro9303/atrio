@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "flowRef": "project-initialization@1.0.0",
+  "stages": [
+    {
+      "id": "exploration",
+      "state": "in_progress",
+      "startedAt": "2026-08-05T10:00:00Z",
+      "participants": [
+        {
+          "role": "business-agent",
+          "actor": {
+            "kind": "agent",
+            "name": "Diana",
+            "agentId": "business-explorer@1.0.0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "product-definition",
+      "state": "pending"
+    },
+    {
+      "id": "technical-analysis",
+      "state": "pending"
+    },
+    {
+      "id": "initial-planning",
+      "state": "pending"
+    },
+    {
+      "id": "scaffold",
+      "state": "pending"
+    }
+  ]
+}

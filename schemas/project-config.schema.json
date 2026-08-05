@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-config.schema.json",
+  "title": "Project configuration",
+  "description": "The project's own configuration, stored at .atrio/config.json (ADR-014): identity, the blocking minimum the scaffold collected at init, the declared environments and providers, and the versions the core needs to migrate the project safely.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/envelope"}],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "The project's purpose. Part of the scaffold's blocking minimum: init does not proceed without it (01-definicion-producto.md, scaffold minimum).",
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactLanguage": {
+      "description": "ISO 639-1 code of the language the project's artifacts are written in. Set at project creation and immutable afterwards; that immutability is enforced by the core comparing this document across versions, not by this schema.",
+      "type": "string",
+      "pattern": "^[a-z]{2}$"
+    },
+    "environments": {
+      "description": "The project's deployment environments. Defaults to dev, staging, prod when none are supplied at initialization; mutable afterwards. A task's closureEnvironment must name one of these entries, but that cross-artifact check belongs to the core, not to this schema.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "layers": {
+      "description": "The system's layers. A layer's folder is only created once its blocking definition — stack and applicationType — is set, not merely on the layer's name.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/layer"}
+    },
+    "providers": {
+      "description": "The agent CLI providers configured for this project, e.g. claude-code.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/provider"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "platformVersion": {
+      "description": "The Atrio version that created, or last migrated, this project.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "schemaVersions": {
+      "description": "Schema generation in use, per artifact type (e.g. task, decision). Lets the core migrate artifacts selectively instead of forcing every artifact type to the latest generation at once.",
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z-]*$"},
+      "additionalProperties": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+      "minProperties": 1
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "artifactLanguage",
+    "environments",
+    "layers",
+    "providers",
+    "platformVersion",
+    "schemaVersions"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "layer": {
+      "description": "One layer of the system: what it is called, the stack it runs on, and the kind of application it is.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stack": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "applicationType": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["name", "stack", "applicationType"],
+      "additionalProperties": false
+    },
+    "provider": {
+      "description": "One agent CLI provider available to this project.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["id"],
+      "additionalProperties": false
+    }
+  }
+}

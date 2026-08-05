@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W6",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T14:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "flowRef": "project-initialization@1.0.0",
+  "stages": [
+    {
+      "id": "exploration",
+      "state": "skipped",
+      "skipReason": "The user brought a definition document; nothing to explore from scratch."
+    },
+    {
+      "id": "product-definition",
+      "state": "closed",
+      "startedAt": "2026-08-05T10:00:00Z",
+      "closedAt": "2026-08-05T10:40:00Z",
+      "outputRefs": [
+        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W7"}
+      ]
+    },
+    {
+      "id": "technical-analysis",
+      "state": "closed",
+      "startedAt": "2026-08-05T10:40:00Z",
+      "closedAt": "2026-08-05T13:15:00Z",
+      "outputRefs": [
+        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W8"}
+      ]
+    },
+    {
+      "id": "initial-planning",
+      "state": "in_progress",
+      "startedAt": "2026-08-05T13:15:00Z",
+      "participants": [
+        {
+          "role": "product-owner",
+          "actor": {
+            "kind": "human",
+            "name": "Cesar Burgos",
+            "email": "cbr9303@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scaffold",
+      "state": "pending"
+    }
+  ]
+}

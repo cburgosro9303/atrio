@@ -204,10 +204,30 @@ Lo que sigue prohibido, sin excepción: `core` importando cualquier paquete del 
 
 ---
 
+## ADR-017 — Front-matter documental en YAML validado
+
+*Acota el alcance de ADR-005, que sigue vigente sin excepción para los artefactos de la plataforma.*
+
+**Contexto.** ADR-005 descarta YAML como formato de artefactos por su laxitud: tipos implícitos y ambigüedades que juegan contra la validación estricta. ADR-014 fija que los metadatos documentales viven en front-matter dentro del propio markdown —el sidecar se descartó porque metadato y contenido se desincronizan— pero no declara en qué se serializa ese bloque. Los documentos no son artefactos de la plataforma: los escribe un humano en su editor, los renderiza GitHub, y el índice determinístico se construye parseándolos. La convención universal del ecosistema markdown para ese bloque es YAML entre `---`, y es la que esperan editores, previsualizadores y el propio GitHub.
+
+**Decisión.** Front-matter en **YAML entre delimitadores `---`**, restringido a un subconjunto plano: sin anclas, sin alias, sin tags personalizados, sin documentos múltiples. El bloque se parsea y el resultado se valida contra `document-front-matter.schema.json` antes de indexar. La laxitud que ADR-005 le reprocha al YAML se ataca donde se puede atacar de verdad —validando lo que salió del parseo— y no eligiendo un formato que nadie escribe a mano dentro de un markdown.
+
+El alcance de esta acotación es exactamente ese bloque. Los artefactos de la plataforma (`.atrio/**/*.json`) siguen siendo JSON sin excepción alguna.
+
+**Alternativas evaluadas.** *(a) Bloque JSON delimitado* — coherencia total con ADR-005 y un solo parser en toda la plataforma, pero rompe la convención que espera cualquier herramienta markdown y obliga al humano a escribir comillas y comas sin comentarios, justo en el paso que decide si su documento es indexable: empuja al error precisamente donde más caro sale. *(b) TOML entre `+++`* — tipado explícito, sin las ambigüedades del YAML y con convención establecida por Hugo, pero suma un tercer formato al proyecto y su reconocimiento fuera del ecosistema Hugo es desigual. *(c) Sidecar* — ya descartada por ADR-014 por desincronización.
+
+**Consecuencias.** La ambigüedad clásica del YAML deja de ser silenciosa: un `language: no` que el parser convierte en booleano —el "problema noruego"— ya no se cuela como valor plausible, choca contra un esquema que exige cadena y produce un error reparador que nombra campo y formato. Un front-matter que no parsea y uno que no valida son indistinguibles para el usuario y caen por la misma ruta: documento no indexable, rechazado o marcado, con rastreo de autor por atribución git.
+
+La elección de la biblioteca YAML —Go puro, sin CGo— pertenece a T-022, donde vive el parser del indexador. T-010 no la necesita: el esquema valida la forma ya parseada, y sus fixtures son esa forma.
+
+Toda ampliación futura del alcance de esta acotación —otro formato, otro lugar donde se acepte YAML— exige un ADR nuevo, no una lectura extensiva de este.
+
+---
+
 ## Pendientes de la sesión técnica
 
 Los pendientes de la versión anterior de este documento (motor de flujos, convención de ramas, catálogo de agentes, deriva de sync, ventana de retrocompatibilidad, nombre del producto) fueron resueltos y consolidados en el *Documento de Arquitectura*. Quedan abiertos únicamente:
 
-- JSON Schemas literales (primera tarea del backlog de implementación — T-010/T-011/T-012).
+- JSON Schemas literales del marketplace y de las definiciones canónicas (T-011/T-012). Los de los artefactos de gestión los cerró T-010.
 - Política fina de disparadores de actualización documental (F4).
 - Validación de marca del nombre Atrio antes del primer release público (ADR-015).

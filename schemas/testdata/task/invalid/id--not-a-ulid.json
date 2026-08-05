@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "01j8z3k2m4n5p6q7r8s9t0v1w2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "stateHistory": [
+    {
+      "to": "draft",
+      "by": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "at": "2026-08-05T10:00:00Z"
+    }
+  ],
+  "type": "task",
+  "title": "T",
+  "state": "draft"
+}

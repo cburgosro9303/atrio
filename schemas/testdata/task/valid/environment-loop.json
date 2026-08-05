@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "stateHistory": [
+    {
+      "to": "draft",
+      "by": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "at": "2026-08-05T10:00:00Z"
+    }
+  ],
+  "type": "task",
+  "title": "Login con OAuth",
+  "state": "testing",
+  "currentEnvironment": "staging",
+  "closureEnvironment": "prod",
+  "branch": "task/01hx4q-login-oauth",
+  "environmentProgress": [
+    {
+      "environment": "dev",
+      "phase": "deployed",
+      "confirmedBy": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "confirmedAt": "2026-08-05T11:00:00Z"
+    },
+    {
+      "environment": "dev",
+      "phase": "tested",
+      "confirmedBy": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "confirmedAt": "2026-08-05T12:00:00Z"
+    }
+  ]
+}

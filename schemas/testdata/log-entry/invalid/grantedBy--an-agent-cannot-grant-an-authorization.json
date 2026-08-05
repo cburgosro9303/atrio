@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "eventType": "authorization_granted",
+  "summary": "Diana granted herself permission to run git push.",
+  "payload": {
+    "capability": "git_remote",
+    "agentRef": "architect@1.2.0",
+    "grantedBy": {
+      "kind": "agent",
+      "name": "Diana",
+      "agentId": "architect@1.2.0"
+    }
+  }
+}

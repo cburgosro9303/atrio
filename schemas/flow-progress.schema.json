@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flow-progress.schema.json",
+  "title": "Flow progress",
+  "description": "Execution progress of a declarative flow (the initialization flow, in M1): which stage is at what point and what it produced. The flow definition itself — purpose, participants, input documents, output schemas, skippability, blocking data — is a separate artifact (T-012); this one only records what happened. Validating a stage's structured output against its own schema is the flow engine's job (T-071), computing the blocking-data checklist is T-072's, and the legal order of transitions between stage states is enforced by the engine, not by this document.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/envelope"}],
+  "properties": {
+    "flowRef": {
+      "description": "The flow definition being executed, as id@version against the global cache.",
+      "$ref": "common.schema.json#/$defs/catalogRef"
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/stageProgress"}
+    }
+  },
+  "required": ["flowRef", "stages"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "state": {
+      "description": "The stage state machine: pending, then in_progress, then pending_closure while closure extraction is retried, then closed or skipped as the two terminal outcomes.",
+      "enum": ["pending", "in_progress", "pending_closure", "closed", "skipped"]
+    },
+    "participant": {
+      "description": "The flow definition declares roles for a stage; progress records who actually occupied each one.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor": {"$ref": "common.schema.json#/$defs/actor"}
+      },
+      "required": ["role", "actor"],
+      "additionalProperties": false
+    },
+    "stageProgress": {
+      "description": "One stage's execution progress within the flow.",
+      "type": "object",
+      "allOf": [
+        {
+          "title": "A closed stage persists its artifact",
+          "if": {
+            "properties": {"state": {"const": "closed"}},
+            "required": ["state"]
+          },
+          "then": {"required": ["closedAt", "outputRefs"], "properties": {"outputRefs": {"minItems": 1}}}
+        },
+        {
+          "title": "A skipped stage names why",
+          "if": {
+            "properties": {"state": {"const": "skipped"}},
+            "required": ["state"]
+          },
+          "then": {"required": ["skipReason"]}
+        },
+        {
+          "title": "A stage that has started records when",
+          "if": {
+            "properties": {"state": {"enum": ["in_progress", "pending_closure", "closed"]}},
+            "required": ["state"]
+          },
+          "then": {"required": ["startedAt"]}
+        }
+      ],
+      "properties": {
+        "id": {
+          "description": "The stage identifier within the flow definition.",
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {"$ref": "#/$defs/state"},
+        "participants": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/participant"}
+        },
+        "outputRefs": {
+          "description": "The artifacts this stage produced when it closed.",
+          "type": "array",
+          "items": {"$ref": "common.schema.json#/$defs/reference"},
+          "uniqueItems": true
+        },
+        "startedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "closedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "skipReason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "closureAttempts": {
+          "description": "The bounded retries of structured-output extraction attempted at closure.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["id", "state"],
+      "additionalProperties": false
+    }
+  }
+}

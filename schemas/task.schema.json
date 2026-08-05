@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task.schema.json",
+  "title": "Task",
+  "description": "A unit of work, or a bug. The schema carries the full lifecycle from day one even though M1 only exercises its early states, so that reaching the later ones costs no migration (01-definicion-producto.md, section 8).",
+  "type": "object",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "title": "A blocked task names its blocker",
+      "if": {
+        "properties": {"state": {"const": "blocked"}},
+        "required": ["state"]
+      },
+      "then": {"required": ["blockedBy"]}
+    },
+    {
+      "title": "The environment loop names the environment it is on",
+      "if": {
+        "properties": {"state": {"enum": ["deploying", "testing"]}},
+        "required": ["state"]
+      },
+      "then": {"required": ["currentEnvironment"]}
+    },
+    {
+      "title": "Only bugs are born in triage, and only bugs come from another task",
+      "if": {
+        "properties": {"type": {"const": "task"}},
+        "required": ["type"]
+      },
+      "then": {
+        "properties": {
+          "state": {"not": {"const": "triage"}},
+          "originTaskRef": false
+        }
+      }
+    }
+  ],
+  "properties": {
+    "type": {
+      "enum": ["task", "bug"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "epicId": {
+      "description": "The epic this task belongs to. Epics are PRD content in M1; no epic artifact is defined yet, so this is a bare reference.",
+      "$ref": "common.schema.json#/$defs/ulid"
+    },
+    "tags": {"$ref": "common.schema.json#/$defs/tags"},
+    "state": {"$ref": "#/$defs/state"},
+    "stateHistory": {
+      "description": "The task's own audit trail. The log records execution events; a task records its own history, and neither duplicates the other (ADR-014).",
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/stateTransition"}
+    },
+    "blockedBy": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/blocker"}
+    },
+    "assignee": {
+      "description": "Who holds the task right now — a person or an agent.",
+      "$ref": "common.schema.json#/$defs/actor"
+    },
+    "closureEnvironment": {
+      "description": "The environment where this task counts as closed. Must be one of the project's declared environments; that cross-artifact check belongs to the core, not to this schema.",
+      "type": "string",
+      "minLength": 1
+    },
+    "currentEnvironment": {
+      "description": "The environment the deploy-then-test loop is currently on. The loop is modelled as two closed states plus this field rather than as one state per environment, so the state enum stays validatable while environments remain mutable.",
+      "type": "string",
+      "minLength": 1
+    },
+    "environmentProgress": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/environmentConfirmation"}
+    },
+    "branch": {
+      "description": "One task, one branch. The exact shape of the short ULID prefix is fixed by the branch creation rules, not here.",
+      "$ref": "common.schema.json#/$defs/branch"
+    },
+    "worktree": {
+      "type": "string",
+      "minLength": 1
+    },
+    "changelogRefs": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/ulid"},
+      "uniqueItems": true
+    },
+    "originTaskRef": {
+      "description": "For a bug: the task it came from. Referencing a task in a definitive state does not reopen it.",
+      "$ref": "common.schema.json#/$defs/ulid"
+    }
+  },
+  "required": ["type", "title", "state", "stateHistory"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "state": {
+      "description": "draft and ready_for_dev cover construction; in_progress, blocked and in_review cover execution; deploying and testing are the per-environment loop; completed and cancelled are definitive and reject mutation, which is a rule the core enforces across versions, not one a schema can see. triage is where bugs are born.",
+      "enum": [
+        "draft",
+        "ready_for_dev",
+        "triage",
+        "in_progress",
+        "blocked",
+        "in_review",
+        "deploying",
+        "testing",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "stateTransition": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "Absent on the first entry: creation has no previous state.",
+          "$ref": "#/$defs/state"
+        },
+        "to": {"$ref": "#/$defs/state"},
+        "by": {"$ref": "common.schema.json#/$defs/actor"},
+        "at": {"$ref": "common.schema.json#/$defs/timestamp"},
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["to", "by", "at"],
+      "additionalProperties": false
+    },
+    "blocker": {
+      "description": "What a blocked task is waiting on. A blocker that is another task points at it; one that is a human answer states the question.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": ["task", "user_question", "pending_decision"]
+        },
+        "ref": {"$ref": "common.schema.json#/$defs/ulid"},
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind"],
+      "additionalProperties": false,
+      "anyOf": [{"required": ["ref"]}, {"required": ["note"]}],
+      "allOf": [
+        {
+          "if": {
+            "properties": {"kind": {"const": "task"}},
+            "required": ["kind"]
+          },
+          "then": {"required": ["ref"]}
+        },
+        {
+          "if": {
+            "properties": {"kind": {"const": "user_question"}},
+            "required": ["kind"]
+          },
+          "then": {"required": ["note"]}
+        }
+      ]
+    },
+    "environmentConfirmation": {
+      "description": "One confirmed step of the loop. Deployment and test states are always confirmed by a human, directly or by instructing an agent to record it on their behalf, so the confirming actor is narrowed to a person.",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "enum": ["deployed", "tested"]
+        },
+        "confirmedBy": {"$ref": "common.schema.json#/$defs/human"},
+        "confirmedAt": {"$ref": "common.schema.json#/$defs/timestamp"}
+      },
+      "required": ["environment", "phase", "confirmedBy", "confirmedAt"],
+      "additionalProperties": false
+    }
+  }
+}

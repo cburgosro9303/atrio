@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W9",
+  "createdAt": "2026-08-05T12:15:00Z",
+  "updatedAt": "2026-08-05T12:15:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "implementer",
+    "agentId": "implementer@1.0.0"
+  },
+  "taskRefs": [
+    "01J8Z3K2M4N5P6Q7R8S9T0V2W2"
+  ],
+  "branch": "task/01hxc2-rename-oauth-flow",
+  "summary": "Rename the OAuth flow file and extract a helper for token exchange.",
+  "changes": [
+    {
+      "path": "core/auth/oauth_flow.go",
+      "kind": "renamed",
+      "previousPath": "core/auth/oauth.go",
+      "description": "Renamed for clarity after splitting the token exchange helper out."
+    },
+    {
+      "path": "core/auth/token_exchange.go",
+      "kind": "added",
+      "description": "New helper extracted from the renamed file."
+    }
+  ]
+}
