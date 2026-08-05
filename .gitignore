@@ -1,0 +1,22 @@
+# Binaries and build output
+/atrio
+/dist/
+/bin/
+
+# Go
+*.test
+*.out
+coverage.*
+
+# Node / SPA build
+node_modules/
+web/dist/
+
+# Atrio local state (dogfooding: nunca versionar la base local)
+.atrio/*.db
+*.db
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
