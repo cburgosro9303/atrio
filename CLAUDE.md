@@ -36,6 +36,13 @@ Plataforma open source, de ejecución local, para desarrollo de software asistid
 - **Push y comandos fuera del allowlist requieren aprobación del usuario** (configurado en `.claude/settings.json`).
 - Para tareas de diseño (T-010, T-011, T-012, T-050): proponer plan y esperar aprobación antes de escribir código.
 
+## Orquestación de modelos
+
+- La **sesión principal corre en Opus** y actúa como orquestador: toma decisiones de diseño, planifica, y delega ejecución.
+- Los **subagentes del proyecto** (`.claude/agents/`) corren en **claude-sonnet-5**: `explorer` (exploración de código/specs, solo lectura, protege el contexto principal), `implementer` (ejecución de tareas ya diseñadas, ideal para las marcadas ∥ en paralelo), `code-reviewer` (revisión contra las reglas duras antes de cada commit).
+- Reparto: razonamiento arquitectónico y tareas de diseño (T-010, T-011, T-012, T-050) en la sesión principal; exploración, implementación mecánica y revisión delegadas a subagentes.
+- Usa `code-reviewer` proactivamente antes de solicitar aprobación de cualquier commit.
+
 ## Comandos del proyecto
 
 Se definirán en T-001 (Makefile/Taskfile). Hasta entonces: `go build ./...`, `go test -race ./...`, `go vet ./...`.
