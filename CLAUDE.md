@@ -61,6 +61,14 @@ Plataforma open source, de ejecución local, para desarrollo de software asistid
 
 El test que hace cumplir las dependencias unidireccionales vive en `internal/archtest`. Se evalúa contra las 5 plataformas de la matriz — sincronizadas con `PLATFORMS` del Makefile por un test, no por un comentario — porque `go list` resuelve build constraints de una en una. Detecta violación directa, desde test interno y externo, lavado transitivo, alcance indebido de `cmd/atrio` a `api`, violación tras build tag y desaparición de un paquete. Huecos conocidos: `go list ./...` no expone paquetes bajo `testdata/`, ni archivos tras build tags personalizados (no hay ninguno todavía).
 
+## Integración continua
+
+`.github/workflows/ci.yml` (GitHub Actions) corre en `push` a `main`, `task/**` y `bug/**`, y en cada `pull_request`. Tres trabajos: `quality` (fmt-check, vet, lint y `go.mod`/`go.sum` limpios tras `tidy`, en un solo runner), `test` (`go test -race -count=1 ./...` en ubuntu, macos y windows, `fail-fast: false`) y `cross-compile` (`make build-all`).
+
+`PLATFORMS` del Makefile es la **única** definición de la matriz: CI la consume vía `make build-all` y nunca reescribe la lista en YAML. El trabajo de tests invoca `go test` directo, no `make test`, porque el runner de Windows no trae GNU make. Esa duplicación es un riesgo real —debilitar el target local dejaría a CI corriendo la invocación vieja, verde sobre una puerta que ya no existe—, así que `internal/citest` la ata con un test: el comando del paso de CI debe ser idéntico al del target `test`, y el YAML no puede nombrar ninguna plataforma. Como con `archtest`: sincronizado por un test, no por un comentario.
+
+Las acciones van ancladas por SHA de commit y `.github/dependabot.yml` las actualiza — acotado a `github-actions`, nunca a `gomod`.
+
 ## Estado actual
 
-**T-001 completada.** Módulo `github.com/cburgosro9303/atrio`, Go 1.26, los 8 paquetes con sus `doc.go`, test de arquitectura y linters operativos. Próxima tarea: **T-002 (CI base)**. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.
+**T-001 y T-002 completadas.** Módulo `github.com/cburgosro9303/atrio`, Go 1.26, los 8 paquetes con sus `doc.go`, test de arquitectura, linters y pipeline de CI operativos. Próxima tarea: **T-010 (JSON Schemas literales de artefactos)**, primera del bloque de contratos de datos; es tarea de diseño, se planifica en la sesión principal y se aprueba antes de escribir. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.

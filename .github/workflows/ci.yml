@@ -1,0 +1,101 @@
+# Atrio — continuous integration.
+#
+# Three gates, together equivalent to `make verify` plus the cross-compile net:
+#
+#   quality        formatting, vet, lint and go.mod hygiene — one runner is enough
+#   test           the mandatory race suite on the three supported systems
+#   cross-compile  every platform in the Makefile's PLATFORMS list
+#
+# Actions are pinned by commit SHA rather than by tag: a tag can be moved, a SHA
+# cannot. .github/dependabot.yml is what keeps those pins from rotting.
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      # Task and bug branches follow {task|bug}/{id}-{slug}; running CI on them
+      # gives a task its evidence before the change is ever proposed.
+      - "task/**"
+      - "bug/**"
+  pull_request:
+
+# Read-only by default. Nothing in this pipeline publishes anything; releases
+# are a separate workflow (T-081) with its own, explicit permissions.
+permissions:
+  contents: read
+
+# A superseded run on a branch is wasted work. A run on main is history.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      # `make fmt-check`, never `make fmt`: the latter rewrites files in place
+      # and always exits 0, so as a gate it could only ever pass.
+      - name: Formatting
+        run: make fmt-check
+
+      - name: Vet
+        run: make vet
+
+      # golangci-lint is a module tool dependency, so the runner needs no
+      # installation step and runs the exact version pinned in go.mod.
+      - name: Lint
+        run: make lint
+
+      # Drift between the source tree and go.mod/go.sum is how an unreviewed
+      # dependency slips in — and this project reviews every one of them.
+      - name: go.mod and go.sum are tidy
+        run: |
+          make tidy
+          git diff --exit-code -- go.mod go.sum
+
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One system failing says nothing about the other two; collect all three.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      # This calls go directly instead of `make test` because GNU make is not on
+      # the Windows runner, and one identical command across the three legs is
+      # worth more than a split where only two of them go through the Makefile.
+      # Keep it in step with the `test` target: -race is mandatory (ADR-001) and
+      # -count=1 disables a cache that cannot see the `go list` subprocess the
+      # architecture test derives its facts from.
+      - name: Race suite
+        shell: bash
+        run: go test -race -count=1 ./...
+
+  cross-compile:
+    name: cross-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      # PLATFORMS in the Makefile is the single definition of the matrix; this
+      # job consumes it instead of restating it, so the list cannot drift. The
+      # build targets carry CGO_ENABLED=0, which is what turns an accidental CGo
+      # dependency into a failure here rather than a broken release later.
+      - name: Build every platform
+        run: make build-all
