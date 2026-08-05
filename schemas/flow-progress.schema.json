@@ -27,10 +27,7 @@
       "description": "The flow definition declares roles for a stage; progress records who actually occupied each one.",
       "type": "object",
       "properties": {
-        "role": {
-          "type": "string",
-          "minLength": 1
-        },
+        "role": {"$ref": "common.schema.json#/$defs/roleId"},
         "actor": {"$ref": "common.schema.json#/$defs/actor"}
       },
       "required": ["role", "actor"],
@@ -68,8 +65,7 @@
       "properties": {
         "id": {
           "description": "The stage identifier within the flow definition.",
-          "type": "string",
-          "minLength": 1
+          "$ref": "common.schema.json#/$defs/stageId"
         },
         "state": {"$ref": "#/$defs/state"},
         "participants": {

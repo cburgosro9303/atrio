@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-definition.schema.json",
+  "title": "Agent definition",
+  "description": "The canonical, provider-agnostic definition of an agent (ADR-013), as the official definitions repository publishes it. Each adapter compiles it into its provider's native dialect rather than the platform maintaining one definition per provider — that compilation, and the drift it is compared against afterwards, is the adapter's job (T-052) and not part of this contract. What a project layers on top of this definition — the display name it uses, the content of the personalization section, the permissions it grants — lives in the project's own agents.json, never here.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/definitionEnvelope"}],
+  "properties": {
+    "role": {
+      "description": "The canonical role this agent plays. A flow names the participants of a stage by role, so an agent without one can take part in no flow. It is deliberately not the same field as the definition's id: two definitions can play the same role.",
+      "$ref": "common.schema.json#/$defs/roleId"
+    },
+    "name": {
+      "description": "How the catalog names this definition — Architect, not Andrés. It is the name a card shows before anybody installs it, so it is not translated and it is not the persona name a project ends up using.",
+      "type": "string",
+      "minLength": 1
+    },
+    "providers": {"$ref": "common.schema.json#/$defs/providerScope"},
+    "defaultDisplayName": {
+      "description": "The person-like name the platform ships this agent with. A project renames it through its personalization layer, and uniqueness of the name among the agents of a project is decided there, where all of them are visible at once.",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "What this agent is responsible for, in the languages the marketplace shows.",
+      "$ref": "common.schema.json#/$defs/localizedText"
+    },
+    "requiredCapabilities": {
+      "description": "What this agent needs from a provider to be installable. The definition is where this is declared and the marketplace manifest is where it is indexed: T-060 generates the manifest from the definitions, so the two can never be two opinions. An empty list says the agent asks nothing special of the provider.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "common.schema.json#/$defs/capability"}
+    },
+    "instructions": {
+      "description": "The file holding the agent's canonical instructions, relative to this definition's own root. The body lives in markdown rather than in a string of this document: the personalization layer is diffed and merged against it when the platform updates (01-definicion-producto.md, section 4.5), and a diff over an escaped JSON string is a diff nobody can read. ADR-013 fixes the definition format as JSON so the platform maintains one format instead of one per provider — not that every byte has to sit inside the JSON.",
+      "$ref": "common.schema.json#/$defs/definitionPath"
+    },
+    "personalization": {
+      "description": "The delimited section a project owns. The platform provides the definition; the team's names, conventions and adjustments go here and are never overwritten by an update (01-definicion-producto.md, section 4.5).",
+      "type": "object",
+      "properties": {
+        "anchor": {
+          "description": "The token in the instructions that the adapter replaces with the project's personalization when it compiles. That the instructions actually contain it, exactly once, is checked by the core: this document cannot see the file it names.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["anchor"],
+      "additionalProperties": false
+    },
+    "providerSettings": {
+      "description": "Provider-specific settings this definition ships with, keyed by provider id — the second of the two configuration levels, the first being everything above it that is provider-agnostic. The shape of each value is owned by that provider's adapter, not by this schema; the key is not, because a typo in a provider id would silently address a provider that does not exist. The pattern is spelled out rather than referenced because a patternProperties key is a literal regular expression, and patternProperties is what a propertyNames constraint has to become for its rejection to name the field it came from; a test keeps this copy equal to the one in common.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9-]*$": {"type": "object"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "providers",
+    "role",
+    "defaultDisplayName",
+    "description",
+    "requiredCapabilities",
+    "instructions",
+    "personalization"
+  ],
+  "unevaluatedProperties": false
+}

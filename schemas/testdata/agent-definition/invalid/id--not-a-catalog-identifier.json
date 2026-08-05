@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "Architect",
+  "name": "Architect",
+  "providers": "all",
+  "role": "architect",
+  "defaultDisplayName": "Andrés",
+  "description": {
+    "es": "Arquitecto.",
+    "en": "Architect."
+  },
+  "requiredCapabilities": [
+    "agents"
+  ],
+  "instructions": "instructions.md",
+  "personalization": {
+    "anchor": "<!-- atrio:personalization -->"
+  }
+}

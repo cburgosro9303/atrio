@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "id": "project-initialization",
+  "name": "Project initialization",
+  "providers": "all",
+  "description": {
+    "es": "Las cinco etapas que llevan de una idea a un monorepo con documentación, backlog semilla y scaffold.",
+    "en": "The five stages that take an idea to a monorepo with documentation, a seed backlog and a scaffold."
+  },
+  "requiredCapabilities": ["agents", "interactive_session", "structured_output"],
+  "stages": [
+    {
+      "id": "exploration",
+      "purpose": {
+        "es": "Conducir la ideación hasta una visión de producto sostenible.",
+        "en": "Drive ideation until a product vision holds."
+      },
+      "participants": ["idea-explorer"],
+      "outputs": [{"artifactType": "document", "tags": ["vision"]}],
+      "skippable": true,
+      "resolves": ["project_purpose"]
+    },
+    {
+      "id": "product-definition",
+      "purpose": {
+        "es": "Escribir el PRD: épicas, alcance y usuarios.",
+        "en": "Write the PRD: epics, scope and users."
+      },
+      "participants": ["product-owner"],
+      "inputs": {"stages": ["exploration"], "tags": ["brief"]},
+      "outputs": [{"artifactType": "document", "tags": ["prd"]}],
+      "skippable": true,
+      "resolves": ["project_purpose"]
+    },
+    {
+      "id": "technical-analysis",
+      "purpose": {
+        "es": "Decidir stack, arquitectura conceptual, capas y ambientes.",
+        "en": "Decide the stack, the conceptual architecture, the layers and the environments."
+      },
+      "participants": ["architect"],
+      "inputs": {"stages": ["exploration", "product-definition"]},
+      "outputs": [
+        {"artifactType": "document", "tags": ["technical-analysis"]},
+        {"artifactType": "decision", "tags": ["architecture"]}
+      ],
+      "skippable": true,
+      "resolves": ["layers", "stack_per_layer", "application_type_per_layer"]
+    },
+    {
+      "id": "initial-planning",
+      "purpose": {
+        "es": "Derivar el backlog semilla del análisis técnico.",
+        "en": "Derive the seed backlog from the technical analysis."
+      },
+      "participants": ["project-manager"],
+      "inputs": {"stages": ["product-definition", "technical-analysis"]},
+      "outputs": [{"artifactType": "task"}],
+      "skippable": true
+    },
+    {
+      "id": "scaffold",
+      "purpose": {
+        "es": "Crear la estructura, las semillas documentales y la configuración de gestión. Determinística: la ejecuta la plataforma.",
+        "en": "Create the structure, the documentation seeds and the management configuration. Deterministic: the platform runs it."
+      },
+      "participants": [],
+      "inputs": {"stages": ["technical-analysis", "initial-planning"]},
+      "outputs": [{"artifactType": "document", "tags": ["scaffold"]}],
+      "skippable": false
+    }
+  ],
+  "blockingData": [
+    {
+      "key": "project_purpose",
+      "question": {
+        "es": "¿Cuál es el propósito del proyecto?",
+        "en": "What is this project for?"
+      }
+    },
+    {
+      "key": "layers",
+      "question": {
+        "es": "¿Qué capas tiene el sistema?",
+        "en": "What layers does the system have?"
+      }
+    },
+    {
+      "key": "stack_per_layer",
+      "question": {
+        "es": "¿Qué lenguaje y stack usa cada capa?",
+        "en": "What language and stack does each layer use?"
+      }
+    },
+    {
+      "key": "application_type_per_layer",
+      "question": {
+        "es": "¿Qué tipo de aplicación es cada capa?",
+        "en": "What kind of application is each layer?"
+      }
+    }
+  ]
+}

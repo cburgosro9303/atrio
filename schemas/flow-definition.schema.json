@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flow-definition.schema.json",
+  "title": "Flow definition",
+  "description": "A declarative flow, as the official definitions repository publishes it (03-arquitectura.md, section 9). The generic engine executes it, so a new flow is new data rather than new code — which is what makes the flows of later phases a distribution problem instead of a release. The initialization flow of M1 is the first one distributed. This document declares what a flow is; flow-progress.schema.json records what happened when one ran, and the two meet at the stage identifier.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/definitionEnvelope"}],
+  "properties": {
+    "name": {
+      "description": "How the catalog names this flow. Not translated: the marketplace card shows it before anybody installs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "providers": {"$ref": "common.schema.json#/$defs/providerScope"},
+    "description": {
+      "description": "What this flow is for, in the languages the marketplace shows.",
+      "$ref": "common.schema.json#/$defs/localizedText"
+    },
+    "requiredCapabilities": {
+      "description": "What a provider must offer for this flow to run. Declared here and indexed by the manifest, which T-060 generates from the definitions.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "common.schema.json#/$defs/capability"}
+    },
+    "stages": {
+      "description": "The stages, in the order they are meant to run. Uniqueness of the identifiers among them is checked by the core: it is a rule between siblings of one document, and uniqueItems does not catch it — two stages with the same id and different content would pass.",
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/stage"}
+    },
+    "blockingData": {
+      "description": "The checklist this flow exists to fill. Stages resolve what they can; at closure the engine computes what is still missing and asks directly for the gaps only (T-072), and a complete checklist is what enables the deterministic scaffold.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/blockingDatum"}
+    }
+  },
+  "required": ["name", "providers", "description", "requiredCapabilities", "stages"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "stage": {
+      "description": "One stage of the flow, declaring the six things a stage declares (03-arquitectura.md, section 9): its purpose, who takes part, what it reads, what it produces, whether it can be skipped, and which blocking data it resolves. The state machine a stage moves through belongs to the progress artifact, not here.",
+      "type": "object",
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/stageId"},
+        "purpose": {
+          "description": "What this stage is for, shown to whoever is running the flow.",
+          "$ref": "common.schema.json#/$defs/localizedText"
+        },
+        "participants": {
+          "description": "The roles that take part, never the agents: a project binds each role to the agent it declared for it, so a flow keeps working when a team swaps one architect definition for another. An empty list is a statement rather than an omission — the stage is deterministic and the platform itself executes it, which is what the scaffold stage is. In M1 the same machinery runs with a single participant; the turn protocol and its agenda arrive in M2 without changing this contract.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/roleId"}
+        },
+        "inputs": {
+          "description": "What this stage reads. The engine resolves it through the documentary index rather than walking the filesystem, which is what makes a stage able to read what earlier ones wrote without knowing where it landed.",
+          "type": "object",
+          "properties": {
+            "stages": {
+              "description": "Earlier stages of this same flow, whose outputs feed this one. That they name stages that exist is checked by the core.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {"$ref": "common.schema.json#/$defs/stageId"}
+            },
+            "tags": {
+              "description": "Anything in the index carrying these tags — among them a document the user brought to the flow rather than one a stage produced.",
+              "$ref": "common.schema.json#/$defs/tags"
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputs": {
+          "description": "The artifacts closing this stage produces. The agent's structured output is validated against the schema of the artifact type named here, and a failure that survives the bounded retries leaves the stage pending_closure (T-071).",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/output"}
+        },
+        "skippable": {
+          "description": "Whether the user may skip this stage. Skipping is not free: the blocking data the stage would have resolved is asked for directly at closure.",
+          "type": "boolean"
+        },
+        "resolves": {
+          "description": "The blocking-data keys this stage is expected to fill. That they name entries this flow declares is checked by the core.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/blockingDataKey"}
+        }
+      },
+      "required": ["id", "purpose", "participants", "outputs", "skippable"],
+      "additionalProperties": false
+    },
+    "output": {
+      "description": "One artifact a stage produces. The type is the schema: naming task here means the extraction is validated against task.schema.json, so a separate schema field would only be a second name for the same thing, free to disagree with the first.",
+      "type": "object",
+      "properties": {
+        "artifactType": {"$ref": "common.schema.json#/$defs/artifactType"},
+        "tags": {
+          "description": "Tags stamped on what this stage produces, so a later stage can ask the index for it.",
+          "$ref": "common.schema.json#/$defs/tags"
+        }
+      },
+      "required": ["artifactType"],
+      "additionalProperties": false
+    },
+    "blockingDatum": {
+      "description": "One entry of the checklist. The blocking minimum of the scaffold — purpose, layers, stack and application type per layer — is fixed by the platform, and the flow says which of it this flow collects.",
+      "type": "object",
+      "properties": {
+        "key": {"$ref": "#/$defs/blockingDataKey"},
+        "question": {
+          "description": "What the engine asks directly when the stages left this gap open.",
+          "$ref": "common.schema.json#/$defs/localizedText"
+        }
+      },
+      "required": ["key", "question"],
+      "additionalProperties": false
+    },
+    "blockingDataKey": {
+      "description": "A datum the platform knows how to act on. Membership in the set the core knows is checked there and not here: the blocking minimum of the scaffold is fixed by the spec, but the flows of later phases bring keys of their own, and a new key must not be a breaking change to a published contract.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    }
+  }
+}

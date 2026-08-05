@@ -16,7 +16,7 @@
       "startedAt": "2026-08-05T10:00:00Z",
       "participants": [
         {
-          "role": "business-agent",
+          "role": "idea-explorer",
           "actor": {
             "kind": "agent",
             "name": "Diana",

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "architect",
+  "name": "Architect",
+  "providers": "all",
+  "role": "architect",
+  "defaultDisplayName": "Andrés",
+  "description": {
+    "es": "Define el stack, la arquitectura conceptual, las capas y los ambientes.",
+    "en": "Defines the stack, the conceptual architecture, the layers and the environments."
+  },
+  "requiredCapabilities": [
+    "agents",
+    "structured_output"
+  ],
+  "instructions": "instructions.md",
+  "personalization": {
+    "anchor": "<!-- atrio:personalization -->"
+  }
+}

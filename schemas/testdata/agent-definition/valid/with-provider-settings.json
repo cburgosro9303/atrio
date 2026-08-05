@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "idea-explorer",
+  "name": "Idea explorer",
+  "providers": "all",
+  "role": "idea-explorer",
+  "defaultDisplayName": "Sofía",
+  "description": {
+    "es": "Conduce la ideación hasta una visión de producto.",
+    "en": "Drives ideation until a product vision holds.",
+    "pt": "Conduz a ideacao ate uma visao de produto."
+  },
+  "requiredCapabilities": [],
+  "instructions": "prompts/instructions.md",
+  "personalization": {
+    "anchor": "<!-- atrio:personalization -->"
+  },
+  "providerSettings": {
+    "claude-code": {
+      "model": "opus",
+      "tools": [
+        "Read",
+        "Grep"
+      ]
+    }
+  }
+}

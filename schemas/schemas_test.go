@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -37,6 +38,11 @@ const (
 	// neither a ULID of its own nor a git identity to attribute it to (T-011).
 	manifestEnvelopeRef = commonSchema + "#/$defs/manifestEnvelope"
 
+	// A canonical definition of the catalog carries a fourth. Like the manifest it
+	// is published rather than created in a project, and unlike the manifest it
+	// carries no version of its own: the tag that ships it is its version (T-012).
+	definitionEnvelopeRef = commonSchema + "#/$defs/definitionEnvelope"
+
 	// An invalid fixture is named <property>--<reason>.json. The property is the
 	// one whose rule the fixture breaks, and the test demands that the validator
 	// point at it: a rejection that cannot say which field is wrong is not the
@@ -51,6 +57,8 @@ const (
 var envelopeFamilies = map[string]string{
 	"document-front-matter.schema.json": documentEnvelopeRef,
 	"marketplace-manifest.schema.json":  manifestEnvelopeRef,
+	"agent-definition.schema.json":      definitionEnvelopeRef,
+	"flow-definition.schema.json":       definitionEnvelopeRef,
 }
 
 // TestEverySchemaCompiles is the floor the other rules stand on. Compiling
@@ -221,6 +229,148 @@ func TestCatalogRefBuildsOnCatalogId(t *testing.T) {
 	}
 }
 
+// TestKeyConstraintsCanNameTheirField bans propertyNames outright. Constraining
+// the keys of a map with it is the obvious thing to reach for and it silently
+// breaks the promise this whole suite exists to keep: the validator reports a
+// propertyNames failure with an *empty* instance location — verified against
+// v6.0.2, where every level of the cause tree came back empty — so the rejection
+// cannot say which field the bad key was in. patternProperties with
+// additionalProperties: false enforces exactly the same thing and fails at the
+// map's own location, which is what makes the error repairable.
+func TestKeyConstraintsCanNameTheirField(t *testing.T) {
+	for _, name := range schemaFiles(t) {
+		t.Run(name, func(t *testing.T) {
+			if where, found := findKeyword(decodeSchema(t, name), "propertyNames", ""); found {
+				t.Errorf("propertyNames at %s: its rejection carries no instance location, so it "+
+					"cannot name the field at fault. Use patternProperties with "+
+					"additionalProperties: false, which constrains the same keys and fails where "+
+					"the author can see it", where)
+			}
+		})
+	}
+}
+
+// keyPatternsWithoutADefinition names the patternProperties keys that mirror
+// nothing in common, and why. A key map whose namespace is genuinely its own
+// belongs here rather than forcing a definition into common that no other schema
+// would ever reference — but it belongs here *named*, so that the rule below can
+// fail closed on every other site.
+var keyPatternsWithoutADefinition = map[string]string{
+	"project-config.schema.json/properties/schemaVersions/patternProperties": "the keys are the document types that carry a schema version, deliberately a " +
+		"broader namespace than the five values of artifactType",
+}
+
+// TestPatternKeysMatchTheirDefinition covers the cost of the rule above. A
+// patternProperties key is a literal regular expression, so it cannot $ref the
+// definition it mirrors and the pattern ends up written out a second time. The
+// rule sweeps the whole corpus rather than a hand-kept list of sites: a list
+// would leave the next map anybody adds silently unchecked, which is the drift
+// this project synchronizes with a test instead of a comment.
+func TestPatternKeysMatchTheirDefinition(t *testing.T) {
+	declared := declaredPatterns(t)
+
+	var swept int
+	for _, name := range schemaFiles(t) {
+		for _, site := range patternKeys(decodeSchema(t, name), name) {
+			swept++
+			t.Run(site.where, func(t *testing.T) {
+				if _, deliberate := keyPatternsWithoutADefinition[site.where]; deliberate {
+					return
+				}
+				definedAs, ok := declared[site.pattern]
+				if !ok {
+					t.Errorf("the key pattern %s matches no definition in %s, so this copy has "+
+						"nothing keeping it honest. Either mirror a definition or say in "+
+						"keyPatternsWithoutADefinition why this namespace is its own", site.pattern, commonSchema)
+					return
+				}
+				// Several definitions share one pattern — a catalog id, a role, a
+				// stage and a provider all spell an identifier the same way — so the
+				// note lists every one of them rather than picking whichever the map
+				// happened to yield.
+				t.Logf("mirrors %s", strings.Join(definedAs, ", "))
+			})
+		}
+	}
+
+	if swept == 0 {
+		t.Fatal("no patternProperties key found anywhere; the sweep is comparing nothing against nothing")
+	}
+
+	// An exemption that outlives the map it was written for is an exemption that
+	// quietly widens the rule.
+	for where := range keyPatternsWithoutADefinition {
+		if !slices.ContainsFunc(allPatternKeys(t), func(site patternKeySite) bool { return site.where == where }) {
+			t.Errorf("keyPatternsWithoutADefinition still exempts %s, which no longer exists", where)
+		}
+	}
+}
+
+type patternKeySite struct {
+	where   string
+	pattern string
+}
+
+func allPatternKeys(t *testing.T) []patternKeySite {
+	t.Helper()
+
+	var found []patternKeySite
+	for _, name := range schemaFiles(t) {
+		found = append(found, patternKeys(decodeSchema(t, name), name)...)
+	}
+	return found
+}
+
+// patternKeys collects every patternProperties key in a schema, wherever it sits.
+func patternKeys(node any, path string) []patternKeySite {
+	var found []patternKeySite
+
+	switch value := node.(type) {
+	case map[string]any:
+		for key, child := range value {
+			where := path + "/" + key
+			if key == "patternProperties" {
+				if keys, ok := child.(map[string]any); ok {
+					for pattern := range keys {
+						found = append(found, patternKeySite{where: where, pattern: pattern})
+					}
+				}
+				continue
+			}
+			found = append(found, patternKeys(child, where)...)
+		}
+	case []any:
+		for i, child := range value {
+			found = append(found, patternKeys(child, fmt.Sprintf("%s/%d", path, i))...)
+		}
+	}
+
+	slices.SortFunc(found, func(a, b patternKeySite) int { return strings.Compare(a.where, b.where) })
+	return found
+}
+
+// declaredPatterns indexes the patterns common declares, so a copy of one can be
+// recognized as a copy.
+func declaredPatterns(t *testing.T) map[string][]string {
+	t.Helper()
+
+	patterns := make(map[string][]string)
+	for name, node := range definition(t, decodeSchema(t, commonSchema), "$defs") {
+		if entry, ok := node.(map[string]any); ok {
+			if pattern, ok := entry["pattern"].(string); ok {
+				patterns[pattern] = append(patterns[pattern], name)
+			}
+		}
+	}
+	for _, names := range patterns {
+		slices.Sort(names)
+	}
+	if len(patterns) == 0 {
+		t.Fatalf("%s declares no pattern at all", commonSchema)
+	}
+	return patterns
+}
+
 // TestEveryArtifactSchemaHasFixtures fails closed on a schema added without
 // tests. Without it, the suite above would report a serene green over a schema
 // nobody ever exercised.
@@ -340,6 +490,32 @@ func names(t *testing.T, document map[string]any, field string) []string {
 	return list
 }
 
+// findKeyword walks a schema document looking for a keyword anywhere in it, and
+// reports the JSON-pointer-ish path where it turned up. It descends into objects
+// and arrays alike: a keyword nested inside an allOf branch counts exactly as
+// much as one at the top.
+func findKeyword(node any, keyword, path string) (string, bool) {
+	switch value := node.(type) {
+	case map[string]any:
+		for key, child := range value {
+			where := path + "/" + key
+			if key == keyword {
+				return where, true
+			}
+			if found, ok := findKeyword(child, keyword, where); ok {
+				return found, true
+			}
+		}
+	case []any:
+		for i, child := range value {
+			if found, ok := findKeyword(child, keyword, fmt.Sprintf("%s/%d", path, i)); ok {
+				return found, true
+			}
+		}
+	}
+	return "", false
+}
+
 // text reads a string out of a schema document, failing the test when it is
 // absent or empty rather than letting a rule compare against nothing.
 func text(t *testing.T, document map[string]any, field string) string {
@@ -363,7 +539,7 @@ func expectedEnvelope(schema string) string {
 // envelopeRefs collects the envelopes a schema composes itself with, so the rule
 // above can insist on exactly one rather than on at least one.
 func envelopeRefs(document map[string]any) []string {
-	known := []string{envelopeRef, documentEnvelopeRef, manifestEnvelopeRef}
+	known := []string{envelopeRef, documentEnvelopeRef, manifestEnvelopeRef, definitionEnvelopeRef}
 
 	entries, ok := document["allOf"].([]any)
 	if !ok {

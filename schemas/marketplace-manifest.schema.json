@@ -34,8 +34,8 @@
           "type": "string",
           "minLength": 1
         },
-        "description": {"$ref": "#/$defs/localizedText"},
-        "providers": {"$ref": "#/$defs/providerScope"},
+        "description": {"$ref": "common.schema.json#/$defs/localizedText"},
+        "providers": {"$ref": "common.schema.json#/$defs/providerScope"},
         "requiredCapabilities": {
           "description": "What this item needs from a provider to be installable. An empty list is a statement, not an omission: it says the item asks nothing special of the provider. A capability the provider lacks is what the platform blocks the installation on, or degrades through a countermeasure of the core.",
           "type": "array",
@@ -44,7 +44,7 @@
         },
         "role": {
           "description": "The canonical role this agent plays, such as architect or product-owner. A flow names its participants by role, so an agent without one can take part in no flow. The stage a role occupies is declared by the flow and not repeated here: the stage-to-role mapping of the initialization flow belongs to that flow, and a second flow reusing a role would contradict it.",
-          "$ref": "common.schema.json#/$defs/catalogId"
+          "$ref": "common.schema.json#/$defs/roleId"
         },
         "files": {
           "description": "The files this definition is made of, each with the digest that verifies it.",
@@ -90,36 +90,13 @@
         }
       ]
     },
-    "localizedText": {
-      "description": "Text the marketplace shows, keyed by ISO 639-1 code. Spanish and English are both mandatory (ADR-014); the map stays open so a third language is data added to the catalog rather than a change to this contract.",
-      "type": "object",
-      "propertyNames": {"pattern": "^[a-z]{2}$"},
-      "additionalProperties": {
-        "type": "string",
-        "minLength": 1
-      },
-      "required": ["es", "en"]
-    },
-    "providerScope": {
-      "description": "Which providers an item can be installed on: every one, or a closed list. A feature exclusive to one provider is announced to the user and installable only there (01-definicion-producto.md, section 4.2).",
-      "oneOf": [
-        {"const": "all"},
-        {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "common.schema.json#/$defs/providerId"}
-        }
-      ]
-    },
     "file": {
       "description": "One file of a definition and the digest that makes its download verifiable (03-arquitectura.md, section 13). Cryptographic signing is deferred to the opening of the ecosystem to third parties, so until then this digest and the official source pinned in configuration are the whole integrity story.",
       "type": "object",
       "properties": {
         "path": {
-          "description": "Path to the file, relative to the item's own root in the definitions repository. Forward slashes only, and no segment can be . or .. — the pattern makes escaping the provider folder on materialization unrepresentable rather than merely discouraged.",
-          "type": "string",
-          "pattern": "^[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
+          "description": "Path to the file, relative to the item's own root in the definitions repository.",
+          "$ref": "common.schema.json#/$defs/definitionPath"
         },
         "sha256": {
           "description": "SHA-256 of the file's contents, lowercase hexadecimal. The algorithm is part of the field name: a bare digest would leave a future change of algorithm no way to say so.",
