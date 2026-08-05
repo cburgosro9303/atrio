@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "implementer",
+    "agentId": "implementer@1.0.0"
+  },
+  "taskRefs": [
+    "01J8Z3K2M4N5P6Q7R8S9T0V1W3"
+  ],
+  "branch": "task/01hxc2-rename-oauth-flow",
+  "summary": "Rename the OAuth flow file.",
+  "changes": [
+    {
+      "path": "core/auth/oauth_flow.go",
+      "kind": "renamed",
+      "description": "Renamed for clarity."
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agents.schema.json",
+  "title": "Agent declarations",
+  "description": "The project's agent roster, stored at .atrio/agents.json (ADR-014): which agents and packs are pulled from the global cache, how each agent is personalized, and what each agent is allowed to do. Uniqueness of displayName across the agents declared in this document is enforced by the core, not by this schema — it is a rule between siblings inside one document, which a JSON Schema document cannot check against itself.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/envelope"}],
+  "properties": {
+    "agents": {
+      "description": "The agents materialized into this project, each against a canonical definition in the global cache.",
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/agentDeclaration"},
+      "uniqueItems": true
+    },
+    "packs": {
+      "description": "Packs of agents pulled in as a unit, each against a canonical definition in the global cache.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/packDeclaration"},
+      "uniqueItems": true
+    }
+  },
+  "required": ["agents"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "agentDeclaration": {
+      "description": "One agent materialized into the project: which canonical definition it comes from, how it is personalized, and what it is allowed to do.",
+      "type": "object",
+      "properties": {
+        "ref": {
+          "description": "The canonical agent definition this declaration materializes, as id@version against the global cache.",
+          "$ref": "common.schema.json#/$defs/catalogRef"
+        },
+        "personalization": {"$ref": "#/$defs/personalization"},
+        "permissions": {"$ref": "#/$defs/permissions"}
+      },
+      "required": ["ref", "personalization"],
+      "additionalProperties": false
+    },
+    "packDeclaration": {
+      "description": "One pack materialized into the project, against its canonical definition in the global cache.",
+      "type": "object",
+      "properties": {
+        "ref": {
+          "description": "The canonical pack definition this declaration materializes, as id@version against the global cache.",
+          "$ref": "common.schema.json#/$defs/catalogRef"
+        }
+      },
+      "required": ["ref"],
+      "additionalProperties": false
+    },
+    "personalization": {
+      "description": "The project-specific identity and content layered onto an agent's canonical definition.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The agent's name within this project, shown wherever the agent acts. Unique across every agent declared in this document; that uniqueness is validated by the core across the whole document, not by this schema.",
+          "type": "string",
+          "minLength": 1
+        },
+        "instructions": {
+          "description": "The content of this agent's delimited personalization section.",
+          "type": "string"
+        },
+        "providerSettings": {
+          "description": "Provider-specific settings for this agent, keyed by provider id. The shape of each value is owned by that provider's adapter, not by this schema.",
+          "type": "object",
+          "additionalProperties": {"type": "object"}
+        }
+      },
+      "required": ["displayName"],
+      "additionalProperties": false
+    },
+    "permissions": {
+      "description": "What this agent is allowed to do: a predefined profile, an explicit map of the seven permission categories, or both. When both are present the explicit map prevails over the profile; that resolution is performed by the core, not by this schema.",
+      "type": "object",
+      "properties": {
+        "profile": {"$ref": "#/$defs/permissionProfile"},
+        "categories": {"$ref": "#/$defs/permissionMap"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "title": "A permission block declares a profile, an explicit map, or both",
+          "anyOf": [
+            {"required": ["profile"]},
+            {"required": ["categories"]}
+          ]
+        }
+      ]
+    },
+    "permissionProfile": {
+      "description": "A predefined bundle of the seven permission categories, so an agent need not set all seven by hand. The expansion from a profile to explicit levels is core behavior (T-041), not part of this schema.",
+      "enum": ["conservative", "standard", "autonomous"]
+    },
+    "permissionLevel": {
+      "description": "How an agent may exercise one permission category. An agent waiting on requires_authorization does not speculatively run other work that depends on the outcome; it asks and waits. That is execution behavior, not a property this schema can express.",
+      "enum": ["allowed", "requires_authorization", "denied"]
+    },
+    "permissionMap": {
+      "description": "The explicit level for each of the seven permission categories. Once declared, all seven are required: a partial map would leave some categories undecided, which is exactly what this model exists to prevent.",
+      "type": "object",
+      "properties": {
+        "read_project_files": {
+          "description": "Read files in the project.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "write_worktree_files": {
+          "description": "Write files in the agent's own worktree.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "run_readonly_commands": {
+          "description": "Run read-only commands: build, test, lint.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "run_arbitrary_commands": {
+          "description": "Run arbitrary commands.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "git_local": {
+          "description": "Local git operations, including commit.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "git_remote": {
+          "description": "Remote git operations: push and pull.",
+          "$ref": "#/$defs/permissionLevel"
+        },
+        "network_access": {
+          "description": "Network access beyond the AI provider.",
+          "$ref": "#/$defs/permissionLevel"
+        }
+      },
+      "required": [
+        "read_project_files",
+        "write_worktree_files",
+        "run_readonly_commands",
+        "run_arbitrary_commands",
+        "git_local",
+        "git_remote",
+        "network_access"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W3",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T12:30:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "flowRef": "project-initialization@1.0.0",
+  "stages": [
+    {
+      "id": "exploration",
+      "state": "closed",
+      "startedAt": "2026-08-05T10:00:00Z",
+      "closedAt": "2026-08-05T10:45:00Z",
+      "outputRefs": [
+        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4"}
+      ],
+      "participants": [
+        {
+          "role": "business-agent",
+          "actor": {
+            "kind": "agent",
+            "name": "Diana",
+            "agentId": "business-explorer@1.0.0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "product-definition",
+      "state": "closed",
+      "startedAt": "2026-08-05T10:45:00Z",
+      "closedAt": "2026-08-05T11:30:00Z",
+      "outputRefs": [
+        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W5"}
+      ],
+      "closureAttempts": 1
+    },
+    {
+      "id": "technical-analysis",
+      "state": "pending_closure",
+      "startedAt": "2026-08-05T11:30:00Z",
+      "closureAttempts": 2,
+      "participants": [
+        {
+          "role": "architect",
+          "actor": {
+            "kind": "agent",
+            "name": "Aria",
+            "agentId": "architect@1.2.0"
+          }
+        },
+        {
+          "role": "product-owner",
+          "actor": {
+            "kind": "human",
+            "name": "Cesar Burgos",
+            "email": "cbr9303@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "id": "initial-planning",
+      "state": "pending"
+    },
+    {
+      "id": "scaffold",
+      "state": "pending"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "name": "storefront",
+  "description": "E-commerce storefront with a staged rollout across regional environments.",
+  "artifactLanguage": "en",
+  "environments": ["dev", "qa", "canary", "prod-eu", "prod-us"],
+  "layers": [
+    {
+      "name": "backend",
+      "stack": ["node", "typescript"],
+      "applicationType": "api"
+    }
+  ],
+  "providers": [
+    {"id": "claude-code"}
+  ],
+  "platformVersion": "0.2.1",
+  "schemaVersions": {
+    "task": 1
+  }
+}

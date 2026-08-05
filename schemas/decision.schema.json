@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "decision.schema.json",
+  "title": "Decision",
+  "description": "An architecture decision record: the context that prompted it, the choice made, and its consequences. Immutable except for the transition to superseded (ADR-014); that comparison spans two versions of the document and is enforced by the core, not by this schema.",
+  "type": "object",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "title": "A superseded decision names the decision that replaced it",
+      "if": {
+        "properties": {"status": {"const": "superseded"}},
+        "required": ["status"]
+      },
+      "then": {"required": ["supersededBy"]}
+    }
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "description": "The situation that made a decision necessary.",
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "description": "The choice made.",
+      "type": "string",
+      "minLength": 1
+    },
+    "consequences": {
+      "description": "The effects of the decision, positive or negative.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "alternativesConsidered": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/alternative"}
+    },
+    "status": {
+      "description": "active or superseded. The transition from active to superseded, and the requirement that the previous version was active, is a rule about two versions of the same document and is enforced by the core, not by this schema.",
+      "enum": ["active", "superseded"]
+    },
+    "supersededBy": {
+      "description": "The decision that replaces this one.",
+      "$ref": "common.schema.json#/$defs/ulid"
+    },
+    "refs": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/reference"},
+      "uniqueItems": true
+    }
+  },
+  "required": ["title", "context", "decision", "consequences", "status"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "alternative": {
+      "description": "An option that was considered and set aside, with the reason it was not chosen.",
+      "type": "object",
+      "properties": {
+        "option": {
+          "type": "string",
+          "minLength": 1
+        },
+        "whyNot": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["option", "whyNot"],
+      "additionalProperties": false
+    }
+  }
+}

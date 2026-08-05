@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T10:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "agents": [
+    {
+      "ref": "project-manager@0.3.1",
+      "personalization": {
+        "displayName": "Elena"
+      },
+      "permissions": {
+        "profile": "autonomous"
+      }
+    }
+  ],
+  "packs": [
+    {"ref": "go-backend-pack@1.0.0"},
+    {"ref": "react-frontend-pack@1.4.2"}
+  ]
+}

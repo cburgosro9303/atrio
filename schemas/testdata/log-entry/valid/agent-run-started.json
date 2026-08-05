@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1X2",
+  "createdAt": "2026-08-05T12:00:00Z",
+  "updatedAt": "2026-08-05T12:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "eventType": "agent_run_started",
+  "summary": "Diana started working on the portal task",
+  "payload": {
+    "agentRef": "architect@1.2.0",
+    "command": "claude -p"
+  },
+  "refs": [
+    {
+      "type": "task",
+      "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2"
+    }
+  ]
+}

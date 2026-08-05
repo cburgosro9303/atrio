@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "title": "Provider adapter contract",
+  "purpose": "Describes the five responsibilities every provider adapter must implement.",
+  "language": "en",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W6",
+  "title": "Document metadata and the SQLite index",
+  "purpose": "Shows how the validator parses front matter and how the index is rebuilt from the parsed result.",
+  "language": "es",
+  "tags": ["documentation", "indexing", "sqlite"],
+  "relations": [
+    {
+      "kind": "derives_from",
+      "target": {"type": "decision", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W7"}
+    },
+    {
+      "kind": "supersedes",
+      "target": {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W8"}
+    }
+  ]
+}

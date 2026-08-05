@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4",
+  "createdAt": "2026-08-05T11:30:00Z",
+  "updatedAt": "2026-08-05T11:45:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "taskRefs": [
+    "01J8Z3K2M4N5P6Q7R8S9T0V1W5",
+    "01J8Z3K2M4N5P6Q7R8S9T0V1W6"
+  ],
+  "branch": "task/01hx9m-session-store",
+  "summary": "Add a SQLite-backed session store and wire it into the auth middleware.",
+  "changes": [
+    {
+      "path": "store/session.go",
+      "kind": "added",
+      "description": "New SQLite-backed session store."
+    },
+    {
+      "path": "api/middleware/auth.go",
+      "kind": "modified",
+      "description": "Use the new session store instead of the in-memory map."
+    }
+  ],
+  "impacts": [
+    {
+      "type": "document",
+      "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W7"
+    },
+    {
+      "type": "decision",
+      "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W8"
+    }
+  ]
+}

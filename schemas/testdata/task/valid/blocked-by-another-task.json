@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "createdAt": "2026-08-05T10:00:00Z",
+  "updatedAt": "2026-08-05T14:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "type": "task",
+  "title": "Publicar el portal local",
+  "description": "Servir la SPA embebida desde el binario.",
+  "state": "blocked",
+  "epicId": "01J8Z3K2M4N5P6Q7R8S9T0V1W3",
+  "assignee": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "worktree": "/Users/cesar/atrio-worktrees/t-080",
+  "changelogRefs": [
+    "01J8Z3K2M4N5P6Q7R8S9T0V1W4"
+  ],
+  "blockedBy": [
+    {
+      "kind": "task",
+      "ref": "01J8Z3K2M4N5P6Q7R8S9T0V1W5",
+      "note": "Espera al adaptador de Claude Code"
+    },
+    {
+      "kind": "pending_decision",
+      "ref": "01J8Z3K2M4N5P6Q7R8S9T0V1W6"
+    }
+  ],
+  "stateHistory": [
+    {
+      "to": "draft",
+      "by": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "at": "2026-08-05T10:00:00Z"
+    },
+    {
+      "from": "draft",
+      "to": "ready_for_dev",
+      "by": {
+        "kind": "human",
+        "name": "Cesar Burgos",
+        "email": "cbr9303@example.com"
+      },
+      "at": "2026-08-05T11:00:00Z"
+    },
+    {
+      "from": "ready_for_dev",
+      "to": "in_progress",
+      "by": {
+        "kind": "agent",
+        "name": "Diana",
+        "agentId": "architect@1.2.0"
+      },
+      "at": "2026-08-05T12:00:00Z"
+    },
+    {
+      "from": "in_progress",
+      "to": "blocked",
+      "by": {
+        "kind": "agent",
+        "name": "Diana",
+        "agentId": "architect@1.2.0"
+      },
+      "at": "2026-08-05T14:00:00Z",
+      "reason": "El adaptador todavía no expone capacidades"
+    }
+  ]
+}

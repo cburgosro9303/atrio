@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "log-entry.schema.json",
+  "title": "Log entry",
+  "description": "One entry of the append-only project log (ADR-014): a single file per entry, named by its own sortable ULID, so concurrent offline creation never collides and directory order is chronological order. The entry does not redeclare timestamp or actor: the common envelope already carries them — createdAt is when the event happened and createdBy is who caused it — and restating them here would only open a door for the two records to disagree. That the log is append-only, so an entry is never edited after it lands, is a rule the store enforces; no field of this schema could express it.",
+  "type": "object",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "title": "An authorization event records what was asked, of which agent, and who decided",
+      "if": {
+        "properties": {"eventType": {"enum": ["authorization_granted", "authorization_denied"]}},
+        "required": ["eventType"]
+      },
+      "then": {
+        "required": ["payload"],
+        "properties": {
+          "payload": {
+            "required": ["capability", "agentRef", "grantedBy"]
+          }
+        }
+      }
+    },
+    {
+      "title": "An agent run event names the agent that ran",
+      "if": {
+        "properties": {"eventType": {"enum": ["agent_run_started", "agent_run_finished"]}},
+        "required": ["eventType"]
+      },
+      "then": {
+        "required": ["payload"],
+        "properties": {
+          "payload": {
+            "required": ["agentRef"]
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "eventType": {"$ref": "#/$defs/eventType"},
+    "summary": {
+      "description": "The entry's human-readable line, the one that renders in a plain log view without opening payload.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {"$ref": "#/$defs/payload"},
+    "refs": {
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/reference"},
+      "uniqueItems": true
+    }
+  },
+  "required": ["eventType", "summary"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "eventType": {
+      "description": "A closed catalog of what a log entry can record. Widening it is a schema change, not a free-form edit: the log is the audit trail agents and humans both rely on, so a new kind of event needs a decision, not a typo.",
+      "enum": [
+        "agent_run_started",
+        "agent_run_finished",
+        "authorization_granted",
+        "authorization_denied",
+        "milestone",
+        "note"
+      ]
+    },
+    "payload": {
+      "description": "The typed detail an eventType carries. Which properties are required depends on eventType, enforced by the allOf above; the shape here only bounds what each property may be.",
+      "type": "object",
+      "properties": {
+        "agentRef": {
+          "description": "The agent definition the run or the authorization concerns.",
+          "$ref": "common.schema.json#/$defs/catalogRef"
+        },
+        "capability": {
+          "description": "Which of the seven permission categories the authorization was about. It is the same closed catalog agents.json declares levels for, referenced rather than restated.",
+          "$ref": "common.schema.json#/$defs/permissionCategory"
+        },
+        "grantedBy": {
+          "description": "Who decided the authorization. Narrowed to a human: an agent cannot authorize itself or another agent.",
+          "$ref": "common.schema.json#/$defs/human"
+        },
+        "command": {
+          "type": "string"
+        },
+        "exitCode": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

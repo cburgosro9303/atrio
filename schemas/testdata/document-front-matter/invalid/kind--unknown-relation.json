@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2",
+  "title": "Flow engine stage lifecycle",
+  "purpose": "Explains the state machine a flow stage moves through, from pending to closed or skipped.",
+  "language": "en",
+  "relations": [
+    {
+      "kind": "blocks",
+      "target": {"type": "decision", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4"}
+    }
+  ]
+}

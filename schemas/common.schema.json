@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Common definitions",
+  "description": "The envelope and the shared types every Atrio artifact builds on (ADR-014). Identifiers are English because the artifact contract is code, not prose; the project language (artifactLanguage) governs the content a team writes, and translation of labels belongs to presentation.",
+  "$defs": {
+    "schemaVersion": {
+      "description": "Schema generation of this artifact, monotonic per artifact type. Version N reads N-1 and N-2 and always writes N; N-3 and older migrate through an intermediate release.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "ulid": {
+      "description": "ULID in canonical form: 26 characters of Crockford base32, uppercase. The alphabet excludes I, L, O and U, and the first character is bounded by the largest representable timestamp.",
+      "type": "string",
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+    },
+    "timestamp": {
+      "description": "An instant in RFC 3339 form, with offset.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor": {
+      "description": "Who produced a change: a human, identified by the git identity of the project, or an agent, identified by the display name the project declared for it.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": ["human", "agent"]
+        },
+        "name": {
+          "description": "git user.name for a human; the declared displayName for an agent.",
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "description": "git user.email. Required for a human: the platform blocks until git identity is complete, so an attributed change always carries both halves of it.",
+          "type": "string",
+          "format": "email"
+        },
+        "agentId": {
+          "description": "Canonical definition the agent was materialized from.",
+          "$ref": "#/$defs/catalogRef"
+        }
+      },
+      "required": ["kind", "name"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {"kind": {"const": "human"}},
+            "required": ["kind"]
+          },
+          "then": {"required": ["email"]}
+        }
+      ]
+    },
+    "human": {
+      "description": "An actor narrowed to a person. Deployment and test confirmations are never attributable to an agent.",
+      "allOf": [{"$ref": "#/$defs/actor"}],
+      "properties": {"kind": {"const": "human"}}
+    },
+    "catalogRef": {
+      "description": "A definition from the global cache, as id@version: an agent, a pack or a flow. Every place that names one — a declaration, a flow being executed, an agent an event is about — says it the same way, because they all point at the same catalog.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*@[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "permissionCategory": {
+      "description": "The seven categories the core arbitrates (01-definicion-producto.md, section 9). Closed catalog: widening it is a schema change, not a free edit. agents.json declares a level for each one; an authorization event in the log names the one it is about, and a test keeps both lists from drifting apart.",
+      "enum": [
+        "read_project_files",
+        "write_worktree_files",
+        "run_readonly_commands",
+        "run_arbitrary_commands",
+        "git_local",
+        "git_remote",
+        "network_access"
+      ]
+    },
+    "branch": {
+      "description": "A working branch: one task, one branch. The length of the short ULID prefix is fixed by the branch creation rules, not here.",
+      "type": "string",
+      "pattern": "^(task|bug)/[0-9a-z]+-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "reference": {
+      "description": "A typed pointer to another artifact.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": ["task", "decision", "log_entry", "changelog", "document"]
+        },
+        "id": {"$ref": "#/$defs/ulid"}
+      },
+      "required": ["type", "id"],
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "documentEnvelope": {
+      "description": "The reduced envelope of a document's front-matter. It carries identity and schema generation and nothing else: a markdown file is hand-edited, and timestamps or attribution copied there by hand would rot against git, which already knows both (ADR-014, attribution by git identity).",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
+        "id": {"$ref": "#/$defs/ulid"}
+      },
+      "required": ["schemaVersion", "id"]
+    },
+    "envelope": {
+      "description": "Carried by every JSON artifact. Composed with allOf, so artifacts close themselves with unevaluatedProperties rather than additionalProperties.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
+        "id": {"$ref": "#/$defs/ulid"},
+        "createdAt": {"$ref": "#/$defs/timestamp"},
+        "updatedAt": {"$ref": "#/$defs/timestamp"},
+        "createdBy": {"$ref": "#/$defs/actor"}
+      },
+      "required": ["schemaVersion", "id", "createdAt", "updatedAt", "createdBy"]
+    }
+  }
+}

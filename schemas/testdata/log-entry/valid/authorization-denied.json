@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1X1",
+  "createdAt": "2026-08-05T13:00:00Z",
+  "updatedAt": "2026-08-05T13:00:00Z",
+  "createdBy": {
+    "kind": "human",
+    "name": "Cesar Burgos",
+    "email": "cbr9303@example.com"
+  },
+  "eventType": "authorization_denied",
+  "summary": "Cesar Burgos denied Diana permission to run arbitrary commands",
+  "payload": {
+    "capability": "run_arbitrary_commands",
+    "agentRef": "architect@1.2.0",
+    "grantedBy": {
+      "kind": "human",
+      "name": "Cesar Burgos",
+      "email": "cbr9303@example.com"
+    }
+  },
+  "refs": [
+    {
+      "type": "task",
+      "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2"
+    }
+  ]
+}

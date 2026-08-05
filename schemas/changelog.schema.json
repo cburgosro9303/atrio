@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "changelog.schema.json",
+  "title": "Changelog",
+  "description": "The record the platform generates when preparing a push and the bridge agents read after a pull to understand what landed and update the backlog (ADR-014; one task, one branch, one worktree, one changelog).",
+  "type": "object",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"}
+  ],
+  "properties": {
+    "taskRefs": {
+      "description": "The tasks this changelog belongs to. That each id resolves to a task that exists is a cross-artifact check the core performs, not something this schema can see.",
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/ulid"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "branch": {
+      "description": "The branch this changelog was generated for. One task, one branch, one worktree, one changelog.",
+      "$ref": "common.schema.json#/$defs/branch"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "changes": {
+      "description": "What moved in the working tree, one entry per path.",
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/change"}
+    },
+    "impacts": {
+      "description": "Documents and definitions this change affects — what an agent reads after a pull to catch up beyond the diff itself.",
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/reference"},
+      "uniqueItems": true
+    }
+  },
+  "required": ["taskRefs", "branch", "summary", "changes"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "change": {
+      "description": "One changed path. A rename that does not say where it came from cannot be followed, so previousPath is required whenever kind is renamed.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": ["added", "modified", "deleted", "renamed"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "previousPath": {
+          "description": "The path this file was renamed from. Required when kind is renamed.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["path", "kind", "description"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "title": "A renamed file names the path it came from",
+          "if": {
+            "properties": {"kind": {"const": "renamed"}},
+            "required": ["kind"]
+          },
+          "then": {"required": ["previousPath"]}
+        }
+      ]
+    }
+  }
+}

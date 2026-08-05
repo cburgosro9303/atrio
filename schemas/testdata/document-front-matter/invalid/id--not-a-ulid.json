@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "not-a-ulid",
+  "title": "Provider adapter contract",
+  "purpose": "Describes the five responsibilities every provider adapter must implement.",
+  "language": "en"
+}

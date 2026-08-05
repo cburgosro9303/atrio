@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W5",
+  "createdAt": "2026-08-05T13:00:00Z",
+  "updatedAt": "2026-08-05T13:00:00Z",
+  "createdBy": {
+    "kind": "agent",
+    "name": "Diana",
+    "agentId": "architect@1.2.0"
+  },
+  "eventType": "agent_run_finished",
+  "summary": "Diana finished the headless run for T-010.",
+  "payload": {
+    "agentRef": "architect@1.2.0",
+    "command": "atrio run task/t010-artifact-schemas",
+    "exitCode": 0
+  },
+  "refs": [
+    {
+      "type": "task",
+      "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W2"
+    }
+  ]
+}
