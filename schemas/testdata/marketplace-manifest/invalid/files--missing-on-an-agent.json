@@ -1,0 +1,15 @@
+{
+  "manifestVersion": 1,
+  "platformVersion": "0.1.0",
+  "items": [
+    {
+      "id": "architect",
+      "type": "agent",
+      "role": "architect",
+      "name": "Architect",
+      "description": {"es": "Arquitecto.", "en": "Architect."},
+      "providers": "all",
+      "requiredCapabilities": ["agents"]
+    }
+  ]
+}

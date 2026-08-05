@@ -44,8 +44,7 @@
     },
     "platformVersion": {
       "description": "The Atrio version that created, or last migrated, this project.",
-      "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      "$ref": "common.schema.json#/$defs/platformVersion"
     },
     "schemaVersions": {
       "description": "Schema generation in use, per artifact type (e.g. task, decision). Lets the core migrate artifacts selectively instead of forcing every artifact type to the latest generation at once.",
@@ -96,10 +95,7 @@
       "description": "One agent CLI provider available to this project.",
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        }
+        "id": {"$ref": "common.schema.json#/$defs/providerId"}
       },
       "required": ["id"],
       "additionalProperties": false

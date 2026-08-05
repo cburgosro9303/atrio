@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "marketplace-manifest.schema.json",
+  "title": "Marketplace manifest",
+  "description": "The index the official definitions repository publishes per tag (ADR-014): every agent, skill, pack and flow installable at that platform version, what each one needs from a provider, and the files and digests that make its download verifiable. This is the public API of the ecosystem and the document in the project with the widest blast radius: a field removed here breaks every consumer at once.",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/manifestEnvelope"}],
+  "properties": {
+    "items": {
+      "description": "Everything installable at this platform version. The id of an item is unique across the manifest, but that is a rule between siblings inside one document, which a JSON Schema cannot check against itself: the core enforces it.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/item"}
+    }
+  },
+  "required": ["items"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "item": {
+      "description": "One installable definition. An item carries no version of its own: definitions are versioned by the tag that ships them (01-definicion-producto.md, section 4.3), so the reference a project declares is this id joined to the manifest's platformVersion.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "How the catalog names this definition. Joined to the manifest's platformVersion it forms the id@version a project declares against the global cache.",
+          "$ref": "common.schema.json#/$defs/catalogId"
+        },
+        "type": {
+          "description": "What kind of definition this is. A pack groups the others by composition; a flow is a declarative definition the generic engine executes, distributed like any other item (03-arquitectura.md, section 9).",
+          "enum": ["agent", "skill", "pack", "flow"]
+        },
+        "name": {
+          "description": "The definition's name in the catalog. It is not translated: a project renames an agent through its personalization layer, which is where the name a team reads comes from.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {"$ref": "#/$defs/localizedText"},
+        "providers": {"$ref": "#/$defs/providerScope"},
+        "requiredCapabilities": {
+          "description": "What this item needs from a provider to be installable. An empty list is a statement, not an omission: it says the item asks nothing special of the provider. A capability the provider lacks is what the platform blocks the installation on, or degrades through a countermeasure of the core.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/capability"}
+        },
+        "role": {
+          "description": "The canonical role this agent plays, such as architect or product-owner. A flow names its participants by role, so an agent without one can take part in no flow. The stage a role occupies is declared by the flow and not repeated here: the stage-to-role mapping of the initialization flow belongs to that flow, and a second flow reusing a role would contradict it.",
+          "$ref": "common.schema.json#/$defs/catalogId"
+        },
+        "files": {
+          "description": "The files this definition is made of, each with the digest that verifies it.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/file"}
+        },
+        "includes": {
+          "description": "The items this pack groups, by their id in this same manifest. That those ids resolve is checked by the core: a JSON Schema cannot look at the rest of the document.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/catalogId"}
+        }
+      },
+      "required": ["id", "type", "name", "description", "providers", "requiredCapabilities"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "title": "An agent names the role it plays, and only an agent has one",
+          "if": {
+            "properties": {"type": {"const": "agent"}},
+            "required": ["type"]
+          },
+          "then": {"required": ["role"]},
+          "else": {"properties": {"role": false}}
+        },
+        {
+          "title": "A pack is composition: it names what it groups and ships no files of its own",
+          "if": {
+            "properties": {"type": {"const": "pack"}},
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["includes"],
+            "properties": {"files": false}
+          },
+          "else": {
+            "required": ["files"],
+            "properties": {"includes": false}
+          }
+        }
+      ]
+    },
+    "localizedText": {
+      "description": "Text the marketplace shows, keyed by ISO 639-1 code. Spanish and English are both mandatory (ADR-014); the map stays open so a third language is data added to the catalog rather than a change to this contract.",
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z]{2}$"},
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "required": ["es", "en"]
+    },
+    "providerScope": {
+      "description": "Which providers an item can be installed on: every one, or a closed list. A feature exclusive to one provider is announced to the user and installable only there (01-definicion-producto.md, section 4.2).",
+      "oneOf": [
+        {"const": "all"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "common.schema.json#/$defs/providerId"}
+        }
+      ]
+    },
+    "file": {
+      "description": "One file of a definition and the digest that makes its download verifiable (03-arquitectura.md, section 13). Cryptographic signing is deferred to the opening of the ecosystem to third parties, so until then this digest and the official source pinned in configuration are the whole integrity story.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Path to the file, relative to the item's own root in the definitions repository. Forward slashes only, and no segment can be . or .. — the pattern makes escaping the provider folder on materialization unrepresentable rather than merely discouraged.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
+        },
+        "sha256": {
+          "description": "SHA-256 of the file's contents, lowercase hexadecimal. The algorithm is part of the field name: a bare digest would leave a future change of algorithm no way to say so.",
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": ["path", "sha256"],
+      "additionalProperties": false
+    }
+  }
+}

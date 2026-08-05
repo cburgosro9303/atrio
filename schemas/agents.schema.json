@@ -63,8 +63,9 @@
           "type": "string"
         },
         "providerSettings": {
-          "description": "Provider-specific settings for this agent, keyed by provider id. The shape of each value is owned by that provider's adapter, not by this schema.",
+          "description": "Provider-specific settings for this agent, keyed by provider id. The shape of each value is owned by that provider's adapter, not by this schema; the key is not, because a typo in a provider id would silently address a provider that does not exist.",
           "type": "object",
+          "propertyNames": {"$ref": "common.schema.json#/$defs/providerId"},
           "additionalProperties": {"type": "object"}
         }
       },

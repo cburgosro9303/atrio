@@ -32,12 +32,26 @@ const (
 	// has no business restating what git already records.
 	documentEnvelopeRef = commonSchema + "#/$defs/documentEnvelope"
 
+	// The marketplace manifest carries a third form. It is not an artifact of a
+	// project: the official definitions repository publishes it per tag, so it has
+	// neither a ULID of its own nor a git identity to attribute it to (T-011).
+	manifestEnvelopeRef = commonSchema + "#/$defs/manifestEnvelope"
+
 	// An invalid fixture is named <property>--<reason>.json. The property is the
 	// one whose rule the fixture breaks, and the test demands that the validator
 	// point at it: a rejection that cannot say which field is wrong is not the
 	// repairable error the platform promises.
 	reasonSeparator = "--"
 )
+
+// envelopeFamilies names the schemas whose envelope is not the artifact one.
+// Everything absent from here is an artifact of a project and carries the full
+// envelope, which is what keeps the default failing closed: a schema added
+// without an entry is held to the artifact rule until someone decides otherwise.
+var envelopeFamilies = map[string]string{
+	"document-front-matter.schema.json": documentEnvelopeRef,
+	"marketplace-manifest.schema.json":  manifestEnvelopeRef,
+}
 
 // TestEverySchemaCompiles is the floor the other rules stand on. Compiling
 // validates each schema against the 2020-12 meta-schema and resolves every $ref,
@@ -82,9 +96,21 @@ func TestSchemaConventions(t *testing.T) {
 				t.Errorf("unevaluatedProperties is %v, want false: an unknown field is a typo "+
 					"in a field that matters, and it must be rejected rather than ignored", document["unevaluatedProperties"])
 			}
-			if !referencesEnvelope(document) {
-				t.Errorf("no allOf entry references %s or %s; every artifact carries one of the "+
-					"two common envelopes (ADR-014)", envelopeRef, documentEnvelopeRef)
+			// Exactly one envelope, and the one this schema's family calls for.
+			// Merely carrying *an* envelope would let a document declare the
+			// artifact's — inventing a ULID and an author for a file that has
+			// neither — and let the manifest pass while claiming to be an artifact.
+			want := expectedEnvelope(name)
+			switch carried := envelopeRefs(document); {
+			case len(carried) == 0:
+				t.Errorf("no allOf entry references an envelope; every schema carries exactly "+
+					"one (ADR-014), and this one's is %s", want)
+			case len(carried) > 1:
+				t.Errorf("references %d envelopes (%v); a schema carries exactly one, or the "+
+					"fields of the other arrive without anybody having decided they should", len(carried), carried)
+			case carried[0] != want:
+				t.Errorf("carries %s, want %s: the envelope is what says which family a "+
+					"schema belongs to, and this one belongs to the other", carried[0], want)
 			}
 		})
 	}
@@ -169,6 +195,29 @@ func TestPermissionCategoriesMatchTheCatalog(t *testing.T) {
 	if !slices.Equal(categories, demanded) {
 		t.Errorf("the map does not demand every category\ncatalog:  %v\nrequired: %v",
 			categories, demanded)
+	}
+}
+
+// TestCatalogRefBuildsOnCatalogId keeps the two spellings of a catalog
+// identifier from drifting apart. The marketplace manifest names an item by its
+// id alone — the version of every item is the manifest's own platformVersion —
+// and a project declares that same item as id@version. If the id pattern came to
+// admit a character catalogRef's does not, the manifest could ship a perfectly
+// legal item that no project is able to reference.
+func TestCatalogRefBuildsOnCatalogId(t *testing.T) {
+	common := decodeSchema(t, commonSchema)
+	id := text(t, definition(t, common, "$defs", "catalogId"), "pattern")
+	ref := text(t, definition(t, common, "$defs", "catalogRef"), "pattern")
+
+	body, anchored := strings.CutSuffix(id, "$")
+	if !anchored {
+		t.Fatalf("catalogId's pattern %q is not anchored at the end, so it constrains a prefix "+
+			"of an identifier rather than the whole of one", id)
+	}
+
+	if !strings.HasPrefix(ref, body+"@") {
+		t.Errorf("catalogRef no longer builds on catalogId\ncatalogId:  %s\ncatalogRef: %s\n"+
+			"want catalogRef to begin with %q", id, ref, body+"@")
 	}
 }
 
@@ -291,21 +340,48 @@ func names(t *testing.T, document map[string]any, field string) []string {
 	return list
 }
 
-func referencesEnvelope(document map[string]any) bool {
+// text reads a string out of a schema document, failing the test when it is
+// absent or empty rather than letting a rule compare against nothing.
+func text(t *testing.T, document map[string]any, field string) string {
+	t.Helper()
+
+	value, ok := document[field].(string)
+	if !ok || value == "" {
+		t.Fatalf("%s is missing or is not a non-empty string", field)
+	}
+	return value
+}
+
+// expectedEnvelope reports which of the three envelopes a schema has to carry.
+func expectedEnvelope(schema string) string {
+	if ref, ok := envelopeFamilies[schema]; ok {
+		return ref
+	}
+	return envelopeRef
+}
+
+// envelopeRefs collects the envelopes a schema composes itself with, so the rule
+// above can insist on exactly one rather than on at least one.
+func envelopeRefs(document map[string]any) []string {
+	known := []string{envelopeRef, documentEnvelopeRef, manifestEnvelopeRef}
+
 	entries, ok := document["allOf"].([]any)
 	if !ok {
-		return false
+		return nil
 	}
+
+	var carried []string
 	for _, entry := range entries {
 		subschema, ok := entry.(map[string]any)
 		if !ok {
 			continue
 		}
-		if subschema["$ref"] == envelopeRef || subschema["$ref"] == documentEnvelopeRef {
-			return true
+		ref, ok := subschema["$ref"].(string)
+		if ok && slices.Contains(known, ref) {
+			carried = append(carried, ref)
 		}
 	}
-	return false
+	return carried
 }
 
 // artifactName turns "task.schema.json" into "task", the directory its fixtures

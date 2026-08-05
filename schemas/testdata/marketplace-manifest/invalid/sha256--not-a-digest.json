@@ -1,0 +1,21 @@
+{
+  "manifestVersion": 1,
+  "platformVersion": "0.1.0",
+  "items": [
+    {
+      "id": "architect",
+      "type": "agent",
+      "role": "architect",
+      "name": "Architect",
+      "description": {"es": "Arquitecto.", "en": "Architect."},
+      "providers": "all",
+      "requiredCapabilities": ["agents"],
+      "files": [
+        {
+          "path": "agent.json",
+          "sha256": "sha256:9f2c1d4b6a8e3057c9b1d2e4f6a8079b"
+        }
+      ]
+    }
+  ]
+}

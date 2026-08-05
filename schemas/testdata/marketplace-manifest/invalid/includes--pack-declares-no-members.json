@@ -1,0 +1,14 @@
+{
+  "manifestVersion": 1,
+  "platformVersion": "0.1.0",
+  "items": [
+    {
+      "id": "initialization-pack",
+      "type": "pack",
+      "name": "Initialization pack",
+      "description": {"es": "Pack de inicialización.", "en": "Initialization pack."},
+      "providers": "all",
+      "requiredCapabilities": ["agents"]
+    }
+  ]
+}
