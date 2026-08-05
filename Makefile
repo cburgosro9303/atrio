@@ -8,8 +8,10 @@ VERSION ?= dev
 LDFLAGS := -X '$(PKG)/cli.Version=$(VERSION)'
 
 # Platforms covered by the cross-compile check and by the architecture test.
-# The authoritative CI matrix lives in task T-002; this target is the local
-# early-warning net against a dependency that pulls in CGo.
+# This list is the single definition of the matrix: CI's cross-compile job calls
+# `build-all` rather than restating the platforms (.github/workflows/ci.yml), and
+# a test keeps internal/archtest in step with it. Locally the target is the early
+# warning against a dependency that pulls in CGo; in CI it is the gate.
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 
 # CGO_ENABLED=0 is scoped to the build targets, where the cross-compile

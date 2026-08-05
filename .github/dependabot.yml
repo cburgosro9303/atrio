@@ -1,0 +1,15 @@
+# Pinning actions by commit SHA is only honest if something moves the pins; this
+# is that something.
+#
+# Scoped to github-actions deliberately. The gomod ecosystem is left out: the
+# linter tool dependency alone drags in some two hundred indirect modules, so
+# automated updates there would be a stream of pull requests nobody reads, and
+# Go dependencies are reconciled deliberately with `make tidy` instead.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
