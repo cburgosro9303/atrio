@@ -14,7 +14,7 @@ Plataforma open source, de ejecución local, para desarrollo de software asistid
 ### Lenguaje y estructura
 - Core en **Go**. Frontend del portal en React 19.x + TypeScript + Vite 8.x, embebido en el binario.
 - Paquetes: `core/`, `store/`, `gitops/`, `providers/`, `flows/`, `api/`, `cli/`, `web/`.
-- **Dependencias unidireccionales**: `core/` no importa ningún otro paquete del proyecto (dominio puro, sin I/O). Ningún paquete importa `cli/` ni `api/`. Violación = rechazo del cambio.
+- **Dependencias unidireccionales** (ADR-016): `core/` no importa ningún otro paquete del proyecto (dominio puro, sin I/O). Ningún paquete alcanza `cli/` ni `api/`, salvo dos excepciones nominales: `cmd/atrio → cli` (el main *es* la capa de entrega) y `cli → api` (el comando de portal levanta el servidor). `cmd/atrio` alcanza `api` solo transitivamente vía `cli`; importarla directa está prohibido. Violación = rechazo del cambio. **Excepción nueva = ADR nuevo**, nunca una edición al test.
 - **Prohibido CGo**: rompe el cross-compile. SQLite se usa vía `modernc.org/sqlite` (driver Go puro).
 - Código, identificadores y comentarios en **inglés**. Documentación de especificación en español (soporte bilingüe es→en llegará por i18n, no por traducción de código).
 
@@ -45,8 +45,22 @@ Plataforma open source, de ejecución local, para desarrollo de software asistid
 
 ## Comandos del proyecto
 
-Se definirán en T-001 (Makefile/Taskfile). Hasta entonces: `go build ./...`, `go test -race ./...`, `go vet ./...`.
+| Comando | Qué hace |
+|---|---|
+| `make verify` | Barrido previo a cualquier commit: `fmt-check` + `vet` + `lint` + `test` |
+| `make build` | Compila el binario único en `bin/atrio` |
+| `make build-all` | Cross-compile de las 5 plataformas; red temprana contra CGo accidental |
+| `make test` | `go test -race ./...` |
+| `make lint` | golangci-lint, pineado como tool dependency del módulo |
+| `make fmt` | Aplica los formatters en sitio (`fmt-check` los verifica sin tocar nada) |
+| `make tidy` | Reconcilia `go.mod`/`go.sum` |
+
+**`CGO_ENABLED=0` va solo en los targets de build**, nunca global: fuera de darwin el toolchain rechaza `-race` sin cgo (`-race requires cgo`), así que forzarlo globalmente rompería los tests obligatorios en los runners de Linux y Windows. La garantía de cross-compile vive donde corresponde, en `build` y `build-all`.
+
+**Caché de tests.** El test de arquitectura obtiene sus datos de un subproceso `go list`, invisible para la clave de caché de Go: una corrida cacheada reportaría verde sobre una violación real. Se ataca por dos vías — el test lee los fuentes auditados y hace `stat` de sus directorios para meterlos en la clave (cubre edición, alta de archivo y alta de paquete), y `make test` añade `-count=1`. Lo primero es lo que protege a quien invoque `go test` directo, que el allowlist del proyecto permite.
+
+El test que hace cumplir las dependencias unidireccionales vive en `internal/archtest`. Se evalúa contra las 5 plataformas de la matriz — sincronizadas con `PLATFORMS` del Makefile por un test, no por un comentario — porque `go list` resuelve build constraints de una en una. Detecta violación directa, desde test interno y externo, lavado transitivo, alcance indebido de `cmd/atrio` a `api`, violación tras build tag y desaparición de un paquete. Huecos conocidos: `go list ./...` no expone paquetes bajo `testdata/`, ni archivos tras build tags personalizados (no hay ninguno todavía).
 
 ## Estado actual
 
-Repositorio recién inicializado. Próxima tarea: **T-001 (bootstrap del repositorio)**. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.
+**T-001 completada.** Módulo `github.com/cburgosro9303/atrio`, Go 1.26, los 8 paquetes con sus `doc.go`, test de arquitectura y linters operativos. Próxima tarea: **T-002 (CI base)**. Riesgo prioritario a despejar temprano: spike de T-053 (arbitraje de permisos vía hooks de Claude Code) antes de congelar el diseño fino de T-050.

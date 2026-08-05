@@ -8,8 +8,14 @@ Tareas ordenadas por dependencia. Cada bloque depende de los anteriores; dentro 
 
 ## Bloque 0 — Fundaciones del repositorio
 
-**T-001 · Bootstrap del repositorio**
-Módulo Go, estructura de paquetes (`core/`, `store/`, `gitops/`, `providers/`, `flows/`, `api/`, `cli/`, `web/`), linters, formateo, verificación de dependencias unidireccionales (test de imports que falla si `core` importa algo o si alguien importa `cli`/`api`).
+**T-001 · Bootstrap del repositorio** *(estado: **completada**)*
+Módulo Go, estructura de paquetes (`core/`, `store/`, `gitops/`, `providers/`, `flows/`, `api/`, `cli/`, `web/`), linters, formateo, verificación de dependencias unidireccionales (test de imports que falla si `core` importa algo o si alguien importa `cli`/`api` — regla precisada por ADR-016 al implementarla, ver abajo).
+
+Decisiones de cierre: módulo `github.com/cburgosro9303/atrio` (a renombrar cuando se elija la organización GitHub — sub-tarea residual de T-003; el path aparece en `go.mod`, `Makefile` y `.golangci.yml`, el rename los toca los tres); Go fijado en `1.26` sin directiva `toolchain`; `web/` aún no lleva `//go:embed`: sin build de la SPA, la directiva rompería la compilación.
+
+**Regla de dependencias resuelta por ADR-016.** Implementar la regla como test destapó que "nadie importa `cli` ni `api`" no podía convivir con la topología de ADR-002 (el comando de portal levanta el servidor desde `cli`). Se conceden dos excepciones nominales — `cmd/atrio → cli` y `cli → api` — y ninguna más; `cmd/atrio` alcanza `api` solo transitivamente. El test separa import directo de cierre transitivo para que la segunda excepción no arrastre a la primera. **Esto desbloquea T-080**, que ya no arranca contra una regla que lo prohibía.
+
+**Insumos para T-002**: `CGO_ENABLED=0` solo en targets de build (fuera de darwin, `-race` exige cgo); `make test` con `-count=1` porque la caché de Go no ve la salida del subproceso `go list` del que depende el test de arquitectura; usar `make fmt-check`, no `make fmt`, como puerta de CI — `fmt` muta archivos y siempre sale 0.
 
 **T-002 · CI base** *(depende de T-001)*
 Pipeline: build multiplataforma (Linux/macOS/Windows), tests con `-race`, lint. Matriz de cross-compile desde el día uno para detectar dependencias que la rompan (p.ej. CGo accidental).

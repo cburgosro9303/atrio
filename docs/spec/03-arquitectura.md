@@ -48,7 +48,18 @@ Ejecutable único en **Go** que actúa como CLI global (modelo Angular CLI) y si
 
 ## 6. Descomposición del core Go
 
-Paquetes con dependencias unidireccionales: `core/` (dominio puro, sin I/O) · `store/` (JSON + SQLite + validación de esquemas) · `gitops/` · `providers/` (interfaz + `claudecode/`) · `flows/` (motor genérico) · `api/` (HTTP+SSE) · `cli/` · `web/` (SPA embebida). Reglas: `core` no importa nada; nadie importa `cli` ni `api`.
+Paquetes con dependencias unidireccionales: `core/` (dominio puro, sin I/O) · `store/` (JSON + SQLite + validación de esquemas) · `gitops/` · `providers/` (interfaz + `claudecode/`) · `flows/` (motor genérico) · `api/` (HTTP+SSE) · `cli/` · `web/` (SPA embebida). Más `cmd/atrio` (entrypoint del binario) e `internal/archtest` (el test que hace cumplir estas reglas).
+
+**Reglas de dependencia** (ADR-016, que reemplaza la regla original de ADR-012):
+
+- `core` no importa ningún paquete del módulo, ni en producción ni en tests.
+- `cli` y `api` son capas de entrega: nadie las alcanza salvo por las dos excepciones nominales siguientes.
+- **`cmd/atrio` → `cli`**: un binario único necesita un `package main`, y ese main *es* la capa de entrega, no un consumidor de ella.
+- **`cli` → `api`**: el comando de portal levanta el servidor, la dirección que la topología de la sección 3 ya implicaba.
+
+De la segunda excepción se sigue que `cmd/atrio` alcanza `api` transitivamente vía `cli`; importarla directamente sigue prohibido. No hay más excepciones, y añadir una exige ADR nuevo.
+
+Las reglas no son prosa: viven en `internal/archtest`, que separa import directo de cierre transitivo, cubre código de test (`TestImports`/`XTestImports`) y se evalúa contra las 5 plataformas de la matriz de cross-compile.
 
 ## 7. Contrato del adaptador de proveedores
 

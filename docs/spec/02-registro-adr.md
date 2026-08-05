@@ -116,6 +116,8 @@ Formato: cada ADR registra contexto, decisión, alternativas evaluadas y consecu
 
 **Decisión.** `core/` (dominio: tareas, decisiones, flujos — sin I/O), `store/` (JSON versionado + SQLite + validación de esquemas), `gitops/` (envoltura segura de git/worktrees), `providers/` (interfaz de adaptador + `claudecode/`), `flows/` (motor de etapas, reanudable), `api/` (HTTP+SSE local), `cli/` (comandos), `web/` (SPA embebida). Reglas: `core` no importa ningún otro paquete; nadie importa `cli` ni `api`.
 
+**Estado.** La descomposición en paquetes sigue vigente. La **regla de dependencias queda reemplazada por ADR-016**, que la precisa con dos excepciones acotadas y ejecutables.
+
 ---
 
 ## ADR-013 — Contrato del adaptador de proveedores
@@ -171,6 +173,34 @@ Formato: cada ADR registra contexto, decisión, alternativas evaluadas y consecu
 **Decisión.** **Atrio**. Comando: `atrio` (`atrio init`, `atrio sync`). Carpeta de plataforma: `.atrio/`.
 
 **Riesgo documentado (diligencia debida).** Existe Atrio Inc. (atrio.io), empresa con plataforma de computación para desarrolladores (Kubernetes/HPC) con CLI propia y organización GitHub `atrioinc`; también el videojuego "Atrio: The Dark Wild". Ninguna colisión bloquea técnicamente el comando ni la carpeta, pero antes del primer release público debe validarse el aspecto de marca y elegirse un nombre de organización GitHub distintivo (p.ej. `atrio-dev` o similar).
+
+---
+
+## ADR-016 — Excepciones acotadas a la regla de dependencias unidireccionales
+
+*Reemplaza la regla de dependencias de ADR-012 (la descomposición en paquetes de ADR-012 sigue vigente).*
+
+**Contexto.** ADR-012 fija "nadie importa `cli` ni `api`". Al implementarla como test ejecutable en T-001 aparecen dos puntos donde la regla literal es inviable, no por comodidad sino por la topología que ADR-002 ya había decidido:
+
+1. Un binario único necesita un `package main`, y ese main necesariamente importa `cli`.
+2. ADR-002 establece que "el comando de portal levanta un servidor HTTP local que sirve la SPA embebida y expone la misma API interna que consume la CLI". Ese comando vive en `cli` y arranca el servidor de `api`. La regla literal y ADR-002 no pueden ser ambas ciertas.
+
+Detectar esto al escribir el test —y no al llegar a T-080— es exactamente para lo que sirve hacer ejecutable una regla arquitectónica.
+
+**Decisión.** La regla se mantiene con dos excepciones nominales, y solo dos:
+
+- **`cmd/atrio` puede importar `cli`** y, de las capas de entrega, únicamente `cli`. No es un consumidor de la capa de entrega: *es* la capa de entrega, que es lo que la regla protege aguas abajo.
+- **`cli` puede importar `api`**, para que el comando de portal levante el servidor. Es la dirección que ADR-002 ya implicaba.
+
+Ambas excepciones se conceden por árbol, no por paquete exacto: los subpaquetes de `cli` cuentan como `cli`, y los de `cmd/atrio` heredan su permiso sobre `cli`. Es deliberado — el arranque del portal puede vivir en `cli/internal/portal` sin pedir un ADR nuevo. Lo que **no** se hereda es el acceso directo a `api`: `cmd/atrio` y cualquier subpaquete suyo lo tienen prohibido.
+
+De la segunda se sigue que `cmd/atrio` alcanza `api` **transitivamente** a través de `cli`. Eso es consecuencia de la excepción concedida, no una tercera excepción: `cmd/atrio` **no** puede importar `api` directamente, y el test distingue ambos casos usando imports directos y cierre transitivo por separado.
+
+Lo que sigue prohibido, sin excepción: `core` importando cualquier paquete del módulo, y cualquier otro paquete (`store`, `gitops`, `providers`, `flows`, `web`) alcanzando `cli` o `api` por cualquier vía, directa o transitiva.
+
+**Alternativas evaluadas.** *(a) `func main()` dentro de `cli/`* — cumple la regla al pie de la letra sin excepciones, pero es no idiomático y vuelve `cli` un `package main` no importable por nada, incluidos tests de integración futuros. *(b) Extraer un paquete intermedio que `cli` y `api` compartan y que `cli` use para arrancar el servidor* — elimina la excepción a costa de un paquete que existe solo para satisfacer la regla, y desplaza el acoplamiento sin reducirlo. *(c) Mantener la regla literal y resolverlo en T-080* — descartada: deja la contradicción latente hasta el punto de mayor coste de cambio.
+
+**Consecuencias.** La regla deja de ser prosa y pasa a ser un test que discrimina import directo de cierre transitivo (`internal/archtest`). Las excepciones son nominales y aparecen en el código con su justificación: no son un `if` genérico que se pueda ensanchar sin que se note en el diff. Toda excepción futura exige un ADR nuevo, no una edición al test.
 
 ---
 
