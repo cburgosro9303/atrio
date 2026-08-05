@@ -1,0 +1,47 @@
+# golangci-lint configuration for Atrio.
+#
+# The linter binary is pinned as a module tool dependency (see the `tool`
+# directive in go.mod), so `go tool golangci-lint` runs the exact same version
+# locally and in CI.
+#
+# The enabled set is deliberately small and each entry is justified by a project
+# rule. Security is the project's first priority, so gosec is not optional;
+# everything else here catches defects rather than enforcing style.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck # unchecked errors; the platform must never silently swallow one
+    - govet # the standard suite of correctness checks
+    - gosec # G204 in particular: subprocess launched with a variable
+    - ineffassign # assignments whose value is never used
+    - nolintlint # every suppression must name its linter and justify itself
+    - staticcheck # broad correctness and simplification analysis
+    - unused # dead identifiers
+
+  settings:
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+
+    errcheck:
+      # Deferred Close on a reader and similar cases are still errors worth
+      # seeing; do not exclude them wholesale.
+      check-type-assertions: true
+      check-blank: true
+
+  exclusions:
+    # No preset exclusions: rules apply to test code as well, because the
+    # architecture and security rules are enforced from tests.
+    presets: []
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/cburgosro9303/atrio
