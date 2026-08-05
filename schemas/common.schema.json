@@ -58,10 +58,30 @@
       "allOf": [{"$ref": "#/$defs/actor"}],
       "properties": {"kind": {"const": "human"}}
     },
+    "catalogId": {
+      "description": "The identifier half of a catalogRef: an agent, a skill, a pack or a flow as the official catalog names it. It stands alone in the marketplace manifest, where the version is the manifest's own platformVersion and repeating it per item would invite the two to disagree. A test keeps this pattern and catalogRef's from drifting apart.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
     "catalogRef": {
       "description": "A definition from the global cache, as id@version: an agent, a pack or a flow. Every place that names one — a declaration, a flow being executed, an agent an event is about — says it the same way, because they all point at the same catalog.",
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]*@[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "capability": {
+      "description": "One entry of the closed capability catalog the platform governs (ADR-013): what an item needs from a provider to be installable, and what feeds the countermeasures when a provider lacks it. Membership in the catalog is checked by the core, not here. The catalog is closed by T-050, which runs after the manifest is public, and the spec that names eight entries closes them with an ellipsis — pinning them into this contract would make the ninth capability a breaking change to a published API rather than a platform release.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "providerId": {
+      "description": "An agent CLI provider, as the platform names it: claude-code and, from M2 on, the others. The same spelling identifies a provider wherever it appears — the project's provider list, the per-provider settings of an agent, and the providers an item of the marketplace can be installed on.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "platformVersion": {
+      "description": "An Atrio release, as the tag that ships it.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
     "permissionCategory": {
       "description": "The seven categories the core arbitrates (01-definicion-producto.md, section 9). Closed catalog: widening it is a schema change, not a free edit. agents.json declares a level for each one; an authorization event in the log names the one it is about, and a test keeps both lists from drifting apart.",
@@ -108,6 +128,15 @@
         "id": {"$ref": "#/$defs/ulid"}
       },
       "required": ["schemaVersion", "id"]
+    },
+    "manifestEnvelope": {
+      "description": "Carried by the marketplace manifest, and by nothing else. The manifest is not an artifact of a project: the official definitions repository publishes it per tag, so it has no ULID of its own and no git identity to attribute it to, and giving it the artifact envelope would mean inventing both. manifestVersion is the schema generation under the name the public API uses (ADR-005: the manifest follows the same standard as the artifacts).",
+      "type": "object",
+      "properties": {
+        "manifestVersion": {"$ref": "#/$defs/schemaVersion"},
+        "platformVersion": {"$ref": "#/$defs/platformVersion"}
+      },
+      "required": ["manifestVersion", "platformVersion"]
     },
     "envelope": {
       "description": "Carried by every JSON artifact. Composed with allOf, so artifacts close themselves with unevaluatedProperties rather than additionalProperties.",

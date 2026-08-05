@@ -1,0 +1,152 @@
+{
+  "manifestVersion": 1,
+  "platformVersion": "0.1.0",
+  "items": [
+    {
+      "id": "idea-explorer",
+      "type": "agent",
+      "role": "idea-explorer",
+      "name": "Idea explorer",
+      "description": {
+        "es": "Conduce la ideación hasta una visión de producto.",
+        "en": "Drives ideation until a product vision holds."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["agents", "interactive_session"],
+      "files": [
+        {
+          "path": "agent.json",
+          "sha256": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
+        },
+        {
+          "path": "personalization/instructions.md",
+          "sha256": "2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a"
+        }
+      ]
+    },
+    {
+      "id": "product-owner",
+      "type": "agent",
+      "role": "product-owner",
+      "name": "Product owner",
+      "description": {
+        "es": "Escribe el PRD, las épicas, el alcance y los usuarios.",
+        "en": "Writes the PRD, the epics, the scope and the users."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["agents", "structured_output"],
+      "files": [
+        {
+          "path": "agent.json",
+          "sha256": "3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b"
+        }
+      ]
+    },
+    {
+      "id": "architect",
+      "type": "agent",
+      "role": "architect",
+      "name": "Architect",
+      "description": {
+        "es": "Define el stack, la arquitectura conceptual, las capas y los ambientes.",
+        "en": "Defines the stack, the conceptual architecture, the layers and the environments."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["agents", "structured_output"],
+      "files": [
+        {
+          "path": "agent.json",
+          "sha256": "4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c"
+        }
+      ]
+    },
+    {
+      "id": "project-manager",
+      "type": "agent",
+      "role": "project-manager",
+      "name": "Project manager",
+      "description": {
+        "es": "Deriva el backlog semilla del análisis técnico.",
+        "en": "Derives the seed backlog from the technical analysis."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["agents", "structured_output"],
+      "files": [
+        {
+          "path": "agent.json",
+          "sha256": "5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d"
+        }
+      ]
+    },
+    {
+      "id": "project-initialization",
+      "type": "flow",
+      "name": "Project initialization",
+      "description": {
+        "es": "Las cinco etapas que llevan de una idea a un monorepo con documentación, backlog y scaffold.",
+        "en": "The five stages that take an idea to a monorepo with documentation, a backlog and a scaffold."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["headless_execution", "structured_output"],
+      "files": [
+        {
+          "path": "flow.json",
+          "sha256": "6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e"
+        }
+      ]
+    },
+    {
+      "id": "repository-conventions",
+      "type": "skill",
+      "name": "Repository conventions",
+      "description": {
+        "es": "Convenciones de rama, commit y changelog del proyecto.",
+        "en": "The project's branch, commit and changelog conventions."
+      },
+      "providers": ["claude-code"],
+      "requiredCapabilities": ["skills"],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f"
+        }
+      ]
+    },
+    {
+      "id": "initialization-pack",
+      "type": "pack",
+      "name": "Initialization pack",
+      "description": {
+        "es": "Los cuatro agentes del flujo de inicialización, con el flujo que los coordina.",
+        "en": "The four agents of the initialization flow, together with the flow that coordinates them."
+      },
+      "providers": "all",
+      "requiredCapabilities": ["agents", "structured_output", "interactive_session", "headless_execution"],
+      "includes": [
+        "idea-explorer",
+        "product-owner",
+        "architect",
+        "project-manager",
+        "project-initialization"
+      ]
+    },
+    {
+      "id": "token-reporter",
+      "type": "skill",
+      "name": "Token reporter",
+      "description": {
+        "es": "Resume el consumo de tokens de una sesión cuando el proveedor lo expone.",
+        "en": "Summarizes a session's token usage when the provider exposes it.",
+        "pt": "Resume o consumo de tokens de uma sessao quando o provedor o expoe."
+      },
+      "providers": ["claude-code"],
+      "requiredCapabilities": [],
+      "files": [
+        {
+          "path": ".skillrc",
+          "sha256": "8192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70"
+        }
+      ]
+    }
+  ]
+}

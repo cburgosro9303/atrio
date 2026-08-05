@@ -1,10 +1,10 @@
 # Esquemas de artefactos de Atrio
 
-Contrato público de los artefactos de gestión (ADR-005). Nueve archivos: una definición común y los ocho artefactos que T-010 congela.
+Contrato público de Atrio (ADR-005). Diez archivos: una definición común, los ocho artefactos de gestión que congeló T-010 y el manifiesto del marketplace que congeló T-011.
 
-| Archivo | Artefacto | Dónde vive en un proyecto |
+| Archivo | Artefacto | Dónde vive |
 |---|---|---|
-| `common.schema.json` | Envolvente y tipos compartidos | — (solo `$defs`) |
+| `common.schema.json` | Envolventes y tipos compartidos | — (solo `$defs`) |
 | `task.schema.json` | Tarea y bug | `.atrio/management/tasks/{ulid}.json` |
 | `decision.schema.json` | Decisión | `.atrio/management/decisions/{ulid}.json` |
 | `log-entry.schema.json` | Entrada de bitácora | `.atrio/management/log/{ulid}.json` |
@@ -13,6 +13,7 @@ Contrato público de los artefactos de gestión (ADR-005). Nueve archivos: una d
 | `project-config.schema.json` | Configuración de proyecto | `.atrio/config.json` |
 | `agents.schema.json` | Declaración, personalización y permisos | `.atrio/agents.json` |
 | `document-front-matter.schema.json` | Front-matter documental (forma ya parseada) | cabecera YAML de cada `docs/**/*.md` |
+| `marketplace-manifest.schema.json` | Manifiesto del marketplace | repositorio oficial de definiciones, uno por tag |
 
 ## Convenciones
 
@@ -21,8 +22,8 @@ Contrato público de los artefactos de gestión (ADR-005). Nueve archivos: una d
 - **`schemaVersion` entero** y monótono por tipo de artefacto: la versión `N` lee `N-1` y `N-2` y siempre escribe `N` (`03-arquitectura.md`, §12). `config.json` lleva además el mapa `schemaVersions` para migraciones selectivas.
 - **Identificadores y valores de enum en inglés.** El contrato es código; el idioma del proyecto (`artifactLanguage`) gobierna lo que un equipo escribe, y traducir etiquetas es cosa de presentación.
 - **Ningún campo desconocido pasa.** Un campo no declarado es un typo en un campo que sí importa. La única puerta abierta a propósito es `personalization.providerSettings` de `agents.json`: la forma de los ajustes específicos de cada proveedor la conoce su adaptador, no este contrato.
-- **Un solo sitio por concepto.** El `id@version` del caché, las siete categorías de permisos y el patrón de rama viven en `common.schema.json` y los demás esquemas los referencian. Las categorías aparecen en dos formas —claves del mapa en `agents.json`, valor de enum en la bitácora— y un test las mantiene sincronizadas.
-- **Dos envolventes.** Los artefactos JSON llevan la completa (`schemaVersion`, `id`, `createdAt`, `updatedAt`, `createdBy`); el front-matter lleva la reducida (`schemaVersion`, `id`), porque un markdown se edita a mano y las fechas y la autoría ya las sabe git.
+- **Un solo sitio por concepto.** El `id@version` del caché y su mitad de identificador, las siete categorías de permisos, el patrón de rama, la versión de plataforma y el identificador de proveedor viven en `common.schema.json` y los demás esquemas los referencian. Dos pares están sincronizados por un test y no por un comentario: las categorías, que aparecen como claves del mapa en `agents.json` y como valor de enum en la bitácora; y `catalogId`, que tiene que seguir siendo el prefijo literal de `catalogRef` — si derivaran, el manifiesto podría publicar un ítem perfectamente legal que ningún proyecto puede referenciar.
+- **Tres envolventes, y cada esquema lleva exactamente la suya.** Los artefactos JSON llevan la completa (`schemaVersion`, `id`, `createdAt`, `updatedAt`, `createdBy`); el front-matter lleva la reducida (`schemaVersion`, `id`), porque un markdown se edita a mano y las fechas y la autoría ya las sabe git; el manifiesto lleva la suya (`manifestVersion`, `platformVersion`), porque no es un artefacto de un proyecto sino un índice que el repositorio de definiciones publica por tag, sin ULID ni identidad git que atribuirle. El test no se conforma con que haya *una* envolvente: exige la de la familia del esquema, así que un manifiesto que se declare artefacto falla igual que un artefacto que se declare manifiesto.
 
 ## Qué valida el esquema y qué valida el código
 
@@ -39,6 +40,15 @@ Un esquema ve un documento aislado. Las reglas que comparan versiones o cruzan a
 | Un renombrado dice de dónde viene | esquema (`changelog`) |
 | Una etapa cerrada persiste su artefacto; una omitida, su motivo | esquema (`flow-progress`) |
 | Un bloque de permisos declara perfil o mapa, y el mapa decide las 7 categorías | esquema (`agents`) |
+| Un agente del catálogo nombra su rol, y solo un agente lo tiene | esquema (`marketplace-manifest`) |
+| Un pack es composición: nombra lo que agrupa y no trae archivos propios | esquema (`marketplace-manifest`) |
+| Un archivo del catálogo no puede escapar de su carpeta (`.`/`..` irrepresentables) | esquema (`marketplace-manifest`) |
+| Unicidad del `id` de ítem dentro de un manifiesto | código (T-061) — es regla entre hermanos del mismo documento |
+| Unicidad del `path` dentro de un ítem, sin distinguir mayúsculas | código (T-061) — `uniqueItems` no sirve: dos entradas con el mismo `path` y distinto `sha256` lo pasarían, y la ruta que se materializa colisiona igual en un filesystem que ignora la caja |
+| Los `includes[]` de un pack apuntan a ítems del mismo manifiesto | código (T-061) |
+| Los `providers` y `requiredCapabilities` de un pack cubren los de sus miembros | código (T-061) — el manifiesto los declara, no los deriva, para que una card no tenga que calcular uniones |
+| `requiredCapabilities` pertenece al catálogo cerrado de capacidades | código (T-050) — el catálogo lo cierra el adaptador, no este contrato |
+| El `sha256` declarado casa con el archivo descargado | código (T-061) |
 | Estados definitivos (`completed`, `cancelled`) inmutables | código — compara la versión anterior con la nueva (T-040) |
 | Decisión inmutable salvo la transición a `superseded` | código (T-040) |
 | `artifactLanguage` inmutable tras la creación | código (T-020) |
