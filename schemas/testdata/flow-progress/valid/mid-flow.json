@@ -16,11 +16,14 @@
       "startedAt": "2026-08-05T10:00:00Z",
       "closedAt": "2026-08-05T10:45:00Z",
       "outputRefs": [
-        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4"}
+        {
+          "type": "document",
+          "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W4"
+        }
       ],
       "participants": [
         {
-          "role": "business-agent",
+          "role": "idea-explorer",
           "actor": {
             "kind": "agent",
             "name": "Diana",
@@ -35,7 +38,10 @@
       "startedAt": "2026-08-05T10:45:00Z",
       "closedAt": "2026-08-05T11:30:00Z",
       "outputRefs": [
-        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W5"}
+        {
+          "type": "document",
+          "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W5"
+        }
       ],
       "closureAttempts": 1
     },

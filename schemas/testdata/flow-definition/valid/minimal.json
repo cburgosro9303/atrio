@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "quick-review",
+  "name": "Quick review",
+  "providers": ["claude-code"],
+  "description": {
+    "es": "Una sola etapa que revisa lo que hay y deja una decisión escrita.",
+    "en": "A single stage that reviews what exists and leaves a decision written down."
+  },
+  "requiredCapabilities": ["agents"],
+  "stages": [
+    {
+      "id": "review",
+      "purpose": {
+        "es": "Revisar y decidir.",
+        "en": "Review and decide."
+      },
+      "participants": ["architect"],
+      "outputs": [{"artifactType": "decision"}],
+      "skippable": false
+    }
+  ]
+}

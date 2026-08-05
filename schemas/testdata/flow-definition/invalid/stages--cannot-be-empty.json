@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "quick-review",
+  "name": "Quick review",
+  "providers": "all",
+  "description": {"es": "Revisión.", "en": "Review."},
+  "requiredCapabilities": ["agents"],
+  "stages": []
+}

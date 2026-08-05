@@ -1,6 +1,6 @@
 # Esquemas de artefactos de Atrio
 
-Contrato público de Atrio (ADR-005). Diez archivos: una definición común, los ocho artefactos de gestión que congeló T-010 y el manifiesto del marketplace que congeló T-011.
+Contrato público de Atrio (ADR-005). Doce archivos: una definición común, los ocho artefactos de gestión que congeló T-010, el manifiesto del marketplace que congeló T-011 y las dos definiciones canónicas del catálogo que congeló T-012.
 
 | Archivo | Artefacto | Dónde vive |
 |---|---|---|
@@ -14,6 +14,8 @@ Contrato público de Atrio (ADR-005). Diez archivos: una definición común, los
 | `agents.schema.json` | Declaración, personalización y permisos | `.atrio/agents.json` |
 | `document-front-matter.schema.json` | Front-matter documental (forma ya parseada) | cabecera YAML de cada `docs/**/*.md` |
 | `marketplace-manifest.schema.json` | Manifiesto del marketplace | repositorio oficial de definiciones, uno por tag |
+| `agent-definition.schema.json` | Definición canónica de agente | repositorio oficial de definiciones |
+| `flow-definition.schema.json` | Definición canónica de flujo declarativo | repositorio oficial de definiciones |
 
 ## Convenciones
 
@@ -23,7 +25,8 @@ Contrato público de Atrio (ADR-005). Diez archivos: una definición común, los
 - **Identificadores y valores de enum en inglés.** El contrato es código; el idioma del proyecto (`artifactLanguage`) gobierna lo que un equipo escribe, y traducir etiquetas es cosa de presentación.
 - **Ningún campo desconocido pasa.** Un campo no declarado es un typo en un campo que sí importa. La única puerta abierta a propósito es `personalization.providerSettings` de `agents.json`: la forma de los ajustes específicos de cada proveedor la conoce su adaptador, no este contrato.
 - **Un solo sitio por concepto.** El `id@version` del caché y su mitad de identificador, las siete categorías de permisos, el patrón de rama, la versión de plataforma y el identificador de proveedor viven en `common.schema.json` y los demás esquemas los referencian. Dos pares están sincronizados por un test y no por un comentario: las categorías, que aparecen como claves del mapa en `agents.json` y como valor de enum en la bitácora; y `catalogId`, que tiene que seguir siendo el prefijo literal de `catalogRef` — si derivaran, el manifiesto podría publicar un ítem perfectamente legal que ningún proyecto puede referenciar.
-- **Tres envolventes, y cada esquema lleva exactamente la suya.** Los artefactos JSON llevan la completa (`schemaVersion`, `id`, `createdAt`, `updatedAt`, `createdBy`); el front-matter lleva la reducida (`schemaVersion`, `id`), porque un markdown se edita a mano y las fechas y la autoría ya las sabe git; el manifiesto lleva la suya (`manifestVersion`, `platformVersion`), porque no es un artefacto de un proyecto sino un índice que el repositorio de definiciones publica por tag, sin ULID ni identidad git que atribuirle. El test no se conforma con que haya *una* envolvente: exige la de la familia del esquema, así que un manifiesto que se declare artefacto falla igual que un artefacto que se declare manifiesto.
+- **Cuatro envolventes, y cada esquema lleva exactamente la suya.** Los artefactos JSON llevan la completa (`schemaVersion`, `id`, `createdAt`, `updatedAt`, `createdBy`); el front-matter lleva la reducida (`schemaVersion`, `id`), porque un markdown se edita a mano y las fechas y la autoría ya las sabe git; el manifiesto lleva la suya (`manifestVersion`, `platformVersion`), porque no es un artefacto de un proyecto sino un índice que el repositorio de definiciones publica por tag; y una definición canónica lleva `definitionEnvelope` (`schemaVersion`, `id` del catálogo), que además **no lleva versión propia**: la versión de una definición es el tag que la publica. El test no se conforma con que haya *una* envolvente: exige la de la familia del esquema, así que un manifiesto que se declare artefacto falla igual que un artefacto que se declare manifiesto.
+- **Nunca `propertyNames`.** Restringir las claves de un mapa con esa palabra clave es lo primero que uno alcanza y rompe en silencio la promesa de esta suite: el validador reporta un fallo de `propertyNames` con la **ubicación de instancia vacía**, así que el rechazo no puede decir en qué campo estaba la clave mala. Se usa `patternProperties` con `additionalProperties: false`, que restringe exactamente lo mismo y falla en la ubicación del mapa. Un test lo prohíbe a cualquier profundidad. Coste asumido: la clave de `patternProperties` es una expresión regular literal y no admite `$ref`, así que los patrones que espejan una definición de `common` quedan duplicados; otro test los mantiene iguales.
 
 ## Qué valida el esquema y qué valida el código
 
@@ -48,6 +51,15 @@ Un esquema ve un documento aislado. Las reglas que comparan versiones o cruzan a
 | Los `includes[]` de un pack apuntan a ítems del mismo manifiesto | código (T-061) |
 | Los `providers` y `requiredCapabilities` de un pack cubren los de sus miembros | código (T-061) — el manifiesto los declara, no los deriva, para que una card no tenga que calcular uniones |
 | `requiredCapabilities` pertenece al catálogo cerrado de capacidades | código (T-050) — el catálogo lo cierra el adaptador, no este contrato |
+| El `anchor` de personalización aparece exactamente una vez en el cuerpo de instrucciones | código (T-052) — cruza el JSON y el markdown que nombra |
+| El archivo que `instructions` nombra existe dentro de la definición | código (T-060) |
+| Unicidad del `id` de etapa dentro de una definición de flujo | código (T-070) — `uniqueItems` no sirve: dos etapas con el mismo `id` y distinto contenido lo pasarían |
+| `inputs.stages` nombra etapas del mismo flujo, y anteriores a la que las declara | código (T-070) |
+| `resolves` nombra claves declaradas en `blockingData` del mismo flujo | código (T-072) |
+| Los `participants` de una etapa tienen agente declarado en el proyecto | código (T-070) — cruza la definición con `agents.json` |
+| `blockingData[].key` pertenece al conjunto que el core sabe accionar | código (T-072/T-074) |
+| El `role` que registra un progreso es uno de los que su etapa declara | código (T-070/T-071) — `roleId` es la tercera vocabulario abierto por patrón, y cruza cuatro documentos |
+| El manifiesto coincide con las definiciones de las que se genera | código (T-060) — la definición declara, el manifiesto indexa |
 | El `sha256` declarado casa con el archivo descargado | código (T-061) |
 | Estados definitivos (`completed`, `cancelled`) inmutables | código — compara la versión anterior con la nueva (T-040) |
 | Decisión inmutable salvo la transición a `superseded` | código (T-040) |

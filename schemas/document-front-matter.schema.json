@@ -18,9 +18,8 @@
       "minLength": 1
     },
     "language": {
-      "description": "ISO 639-1 code of the language this document is written in. Must match the project's artifactLanguage; that cross-artifact check is made by the core, not by this schema.",
-      "type": "string",
-      "pattern": "^[a-z]{2}$"
+      "description": "The language this document is written in. Must match the project's artifactLanguage; that cross-artifact check is made by the core, not by this schema.",
+      "$ref": "common.schema.json#/$defs/languageCode"
     },
     "tags": {"$ref": "common.schema.json#/$defs/tags"},
     "relations": {

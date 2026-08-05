@@ -21,7 +21,10 @@
       "startedAt": "2026-08-05T10:00:00Z",
       "closedAt": "2026-08-05T10:40:00Z",
       "outputRefs": [
-        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W7"}
+        {
+          "type": "document",
+          "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W7"
+        }
       ]
     },
     {
@@ -30,7 +33,10 @@
       "startedAt": "2026-08-05T10:40:00Z",
       "closedAt": "2026-08-05T13:15:00Z",
       "outputRefs": [
-        {"type": "document", "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W8"}
+        {
+          "type": "document",
+          "id": "01J8Z3K2M4N5P6Q7R8S9T0V1W8"
+        }
       ]
     },
     {
@@ -39,7 +45,7 @@
       "startedAt": "2026-08-05T13:15:00Z",
       "participants": [
         {
-          "role": "product-owner",
+          "role": "project-manager",
           "actor": {
             "kind": "human",
             "name": "Cesar Burgos",

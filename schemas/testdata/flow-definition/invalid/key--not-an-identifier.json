@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "quick-review",
+  "name": "Quick review",
+  "providers": "all",
+  "description": {"es": "Revisión.", "en": "Review."},
+  "requiredCapabilities": ["agents"],
+  "stages": [
+    {
+      "id": "review",
+      "purpose": {"es": "Revisar.", "en": "Review."},
+      "participants": ["architect"],
+      "outputs": [{"artifactType": "decision"}],
+      "skippable": false
+    }
+  ],
+  "blockingData": [
+    {
+      "key": "Stack Per Layer",
+      "question": {"es": "¿Qué stack?", "en": "Which stack?"}
+    }
+  ]
+}

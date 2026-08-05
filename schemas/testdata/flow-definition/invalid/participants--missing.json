@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "quick-review",
+  "name": "Quick review",
+  "providers": "all",
+  "description": {"es": "Revisión.", "en": "Review."},
+  "requiredCapabilities": ["agents"],
+  "stages": [
+    {
+      "id": "review",
+      "purpose": {"es": "Revisar.", "en": "Review."},
+      "outputs": [{"artifactType": "decision"}],
+      "skippable": false
+    }
+  ]
+}

@@ -16,9 +16,8 @@
       "minLength": 1
     },
     "artifactLanguage": {
-      "description": "ISO 639-1 code of the language the project's artifacts are written in. Set at project creation and immutable afterwards; that immutability is enforced by the core comparing this document across versions, not by this schema.",
-      "type": "string",
-      "pattern": "^[a-z]{2}$"
+      "description": "The language the project's artifacts are written in. Set at project creation and immutable afterwards; that immutability is enforced by the core comparing this document across versions, not by this schema.",
+      "$ref": "common.schema.json#/$defs/languageCode"
     },
     "environments": {
       "description": "The project's deployment environments. Defaults to dev, staging, prod when none are supplied at initialization; mutable afterwards. A task's closureEnvironment must name one of these entries, but that cross-artifact check belongs to the core, not to this schema.",
@@ -47,10 +46,12 @@
       "$ref": "common.schema.json#/$defs/platformVersion"
     },
     "schemaVersions": {
-      "description": "Schema generation in use, per artifact type (e.g. task, decision). Lets the core migrate artifacts selectively instead of forcing every artifact type to the latest generation at once.",
+      "description": "Schema generation in use, per artifact type (e.g. task, decision). Lets the core migrate artifacts selectively instead of forcing every artifact type to the latest generation at once. The keys are constrained with patternProperties and not with propertyNames: a propertyNames failure carries no instance location at all, so the rejection could not name the field it came from.",
       "type": "object",
-      "propertyNames": {"pattern": "^[a-z][a-z-]*$"},
-      "additionalProperties": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+      "patternProperties": {
+        "^[a-z][a-z-]*$": {"$ref": "common.schema.json#/$defs/schemaVersion"}
+      },
+      "additionalProperties": false,
       "minProperties": 1
     }
   },

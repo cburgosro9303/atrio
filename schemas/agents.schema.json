@@ -63,10 +63,12 @@
           "type": "string"
         },
         "providerSettings": {
-          "description": "Provider-specific settings for this agent, keyed by provider id. The shape of each value is owned by that provider's adapter, not by this schema; the key is not, because a typo in a provider id would silently address a provider that does not exist.",
+          "description": "Provider-specific settings for this agent, keyed by provider id. The shape of each value is owned by that provider's adapter, not by this schema; the key is not, because a typo in a provider id would silently address a provider that does not exist. The pattern is spelled out rather than referenced because a patternProperties key is a literal regular expression, and patternProperties is what a propertyNames constraint has to become for its rejection to name the field it came from; a test keeps this copy equal to the one in common.",
           "type": "object",
-          "propertyNames": {"$ref": "common.schema.json#/$defs/providerId"},
-          "additionalProperties": {"type": "object"}
+          "patternProperties": {
+            "^[a-z0-9][a-z0-9-]*$": {"type": "object"}
+          },
+          "additionalProperties": false
         }
       },
       "required": ["displayName"],

@@ -73,6 +73,54 @@
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]*$"
     },
+    "roleId": {
+      "description": "A canonical role an agent plays: architect, product-owner, idea-explorer. A role is not an agent — two definitions can play the same one, and a flow names the roles that take part in a stage while the project binds each role to the agent it declared for it. Four documents spell it: the manifest, an agent's definition, a flow's definition and a flow's progress.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "stageId": {
+      "description": "A stage's identifier within the flow that declares it. The definition names it and the progress artifact records what happened to it, so both say it the same way.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "artifactType": {
+      "description": "The kinds of artifact a reference can point at and a flow stage can produce. The catalog is closed: widening it is a schema change.",
+      "enum": ["task", "decision", "log_entry", "changelog", "document"]
+    },
+    "languageCode": {
+      "description": "A language as an ISO 639-1 code.",
+      "type": "string",
+      "pattern": "^[a-z]{2}$"
+    },
+    "localizedText": {
+      "description": "Text shown to a person, keyed by ISO 639-1 code. Spanish and English are both mandatory (ADR-014); the map stays open so a third language is data rather than a change to the contract. It lives here because the marketplace, an agent's definition and a flow's stages all show text to the same person. The keys are constrained with patternProperties and not with propertyNames: a propertyNames failure carries no instance location at all, so the rejection could not name the field it came from.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z]{2}$": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": ["es", "en"]
+    },
+    "providerScope": {
+      "description": "Which providers something can be installed on: every one, or a closed list. A feature exclusive to one provider is announced to the user and installable only there (01-definicion-producto.md, section 4.2). A definition declares its own scope and the marketplace manifest indexes it, so the catalog and the definition can never be two opinions.",
+      "oneOf": [
+        {"const": "all"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/providerId"}
+        }
+      ]
+    },
+    "definitionPath": {
+      "description": "A path inside a definition of the catalog, relative to that definition's own root. Forward slashes only, and no segment can be . or .. — the pattern makes escaping the provider folder on materialization unrepresentable rather than merely discouraged. It lives here in a single copy on purpose: a second copy of a security rule is a copy that can rot.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
+    },
     "providerId": {
       "description": "An agent CLI provider, as the platform names it: claude-code and, from M2 on, the others. The same spelling identifies a provider wherever it appears — the project's provider list, the per-provider settings of an agent, and the providers an item of the marketplace can be installed on.",
       "type": "string",
@@ -104,9 +152,7 @@
       "description": "A typed pointer to another artifact.",
       "type": "object",
       "properties": {
-        "type": {
-          "enum": ["task", "decision", "log_entry", "changelog", "document"]
-        },
+        "type": {"$ref": "#/$defs/artifactType"},
         "id": {"$ref": "#/$defs/ulid"}
       },
       "required": ["type", "id"],
@@ -126,6 +172,15 @@
       "properties": {
         "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
         "id": {"$ref": "#/$defs/ulid"}
+      },
+      "required": ["schemaVersion", "id"]
+    },
+    "definitionEnvelope": {
+      "description": "Carried by every canonical definition of the catalog: an agent, a flow. Like the manifest, a definition is not an artifact of a project — it is published by the definitions repository, so it has no ULID and no git identity to attribute it to — and unlike the manifest it carries no version of its own: definitions are versioned by the tag that ships them, and the manifest of that tag is what joins this id to a version.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"$ref": "#/$defs/schemaVersion"},
+        "id": {"$ref": "#/$defs/catalogId"}
       },
       "required": ["schemaVersion", "id"]
     },
