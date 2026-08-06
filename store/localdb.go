@@ -250,6 +250,29 @@ func tightenLocalDBPermissions(path string) error {
 // serve it, and every other connection in the pool keeps the defaults.
 // journal_mode is the exception — it is a property of the file rather than of
 // a connection — but it is listed here too so that one place lists them all.
+//
+// _txlock=immediate is not a pragma — it is this driver's own DSN option
+// (modernc.org/sqlite, sqlite.go's connection-string parsing) controlling
+// what db.Begin() sends as its opening statement, "begin" by default. The
+// default is deferred: a deferred transaction acquires no lock at all until
+// its first statement needs one, and if that first statement is a write —
+// exactly the shape every write transaction in this package uses, T-022's
+// document reindex included — SQLite can return SQLITE_BUSY on the spot
+// rather than honoring busy_timeout, which only governs waiting for a lock
+// already being contended, not promoting a transaction into needing one.
+// Measured directly: six goroutines calling T-022's Reindex concurrently
+// against this schema fail with "database is locked" under the default
+// "begin", and stop failing once every connection opens transactions with
+// "begin immediate" instead — confirmed both ways, by removing this
+// parameter and reproducing the failure before restoring it
+// (store/documentindex_test.go's TestDocumentIndexer_Reindex_ConcurrentCalls).
+// So the busy_timeout comment above ("wait rather than fail on a locked
+// database") was not actually true for any write transaction in this
+// package until this parameter was added — see notification.go's MarkRead
+// for the same mechanism named from the read side, before this fix existed.
+// "exclusive" was not chosen: it also blocks concurrent readers, which this
+// package still wants during a write (WAL's whole point), and "immediate"
+// already acquires the write lock up front, which is all this needed.
 func localDBDSN(path string) string {
 	slashed := filepath.ToSlash(path)
 	// A SQLite URI filename is absolute after "file:"; on Windows an absolute
@@ -270,6 +293,10 @@ func localDBDSN(path string) string {
 		// this is idempotent after the first connection.
 		"journal_mode(wal)",
 	}
+	// See the function comment: makes db.Begin() acquire the write lock as
+	// its opening statement, so busy_timeout above actually gets a lock
+	// acquisition to wait on instead of a promotion SQLite refuses outright.
+	pragmas["_txlock"] = []string{"immediate"}
 
 	// Encode percent-escapes the parentheses in the pragma values, so the DSN
 	// carries foreign_keys%281%29 rather than foreign_keys(1). That is correct
