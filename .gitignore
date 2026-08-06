@@ -12,9 +12,17 @@ coverage.*
 node_modules/
 web/dist/
 
-# Atrio local state (dogfooding: nunca versionar la base local)
+# Atrio local state (dogfooding: nunca versionar la base local).
+# Los sufijos -wal y -shm son los sidecars que crea el modo WAL de SQLite
+# junto al archivo. Sin ellos aquí, `git status` reporta el worktree sucio por
+# archivos de la propia plataforma: gitops.Status pasa --untracked-files=normal
+# a propósito para que nada quede oculto (T-030), así que aparecerían.
 .atrio/*.db
+.atrio/*.db-wal
+.atrio/*.db-shm
 *.db
+*.db-wal
+*.db-shm
 
 # Editor/OS
 .DS_Store
