@@ -348,12 +348,21 @@ func (f NotificationFilter) validate() error {
 //     error is returned.
 //
 // The nonexistent-id check below runs as a read (QueryRow) issued only after
-// the update (Exec) on the same id, and never before the first write in the
-// transaction: SQLite opens a deferred (read) transaction on the first
-// statement, and a later attempt to promote it to a write transaction can
-// return SQLITE_BUSY immediately, without honoring the busy_timeout pragma.
-// Issuing the write first keeps this a write transaction from its opening
-// statement.
+// the update (Exec) on the same id. That ordering used to be load-bearing:
+// under the driver's default deferred BEGIN, this transaction's write lock
+// was acquired by whichever statement first needed one, and promoting an
+// already-open read into a write transaction can return SQLITE_BUSY
+// immediately rather than honoring busy_timeout — so the write had to come
+// first, or busy_timeout's own promise ("wait rather than fail on a locked
+// database") would not actually hold for this method. That gap is what T-022
+// measured directly against this package's schema (store/localdb.go's
+// localDBDSN comment has the full account) and closed at its source:
+// localDBDSN now opens every connection with _txlock=immediate, so
+// db.Begin() itself acquires the write lock as its opening statement,
+// before any statement below runs, regardless of which one it is. The
+// ordering here is kept — it still reads naturally as "make the change,
+// then check what happened" — but the DSN, not this ordering, is what
+// stands between this transaction and SQLITE_BUSY now.
 func (n *Notifications) MarkRead(ids ...string) error {
 	if len(ids) == 0 {
 		return nil
