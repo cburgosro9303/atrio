@@ -312,13 +312,32 @@ func TestReset_EmptiesEveryTableAndKeepsTheSchema(t *testing.T) {
 // dropped — which means the ON DELETE CASCADEs in localdb.sql stop firing
 // with no error anywhere.
 func TestLocalDBDSN_AppliesPragmasOnAwkwardPaths(t *testing.T) {
-	names := []string{
-		"plain", "with space", "with?question", "with#hash", "with%percent", "ñ-acentos",
+	names := []struct {
+		name string
+		// unrepresentableOnWindows marks a directory name Windows refuses to
+		// create at all. Windows reserves < > : " / \ | ? * in filenames, so
+		// the '?' case cannot be set up there — os.MkdirAll fails with "the
+		// filename, directory name, or volume label syntax is incorrect"
+		// before OpenLocalDB is ever reached. Skipping it is not weakening the
+		// test: a path that cannot exist cannot carry the defect either, and
+		// the case still runs on the two platforms where it can.
+		unrepresentableOnWindows bool
+	}{
+		{name: "plain"},
+		{name: "with space"},
+		{name: "with?question", unrepresentableOnWindows: true},
+		{name: "with#hash"},
+		{name: "with%percent"},
+		{name: "ñ-acentos"},
 	}
 
-	for _, name := range names {
-		t.Run(name, func(t *testing.T) {
-			root := filepath.Join(t.TempDir(), name)
+	for _, tc := range names {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.unrepresentableOnWindows && runtime.GOOS == "windows" {
+				t.Skip("Windows reserves '?' in filenames, so this directory cannot be created")
+			}
+
+			root := filepath.Join(t.TempDir(), tc.name)
 			if err := os.MkdirAll(root, 0o750); err != nil {
 				t.Fatalf("creating project root %q: %v", root, err)
 			}
